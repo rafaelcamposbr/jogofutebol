@@ -3,6 +3,7 @@ create extension if not exists pgcrypto;
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = pg_catalog
 as $$
 begin
   new.updated_at = now();
@@ -130,7 +131,8 @@ create table if not exists public.app_versions (
   unique (version, environment)
 );
 
-create or replace view public.public_club_profiles as
+create or replace view public.public_club_profiles
+with (security_invoker = true) as
 select
   id,
   name,
@@ -161,6 +163,8 @@ create index if not exists press_releases_club_status_idx on public.press_releas
 create index if not exists news_type_scope_idx on public.news(type, scope);
 create index if not exists events_club_status_idx on public.events(club_id, status);
 create index if not exists feedback_user_status_idx on public.feedback(user_id, status);
+create index if not exists feedback_club_id_idx on public.feedback(club_id);
+create index if not exists press_releases_author_id_idx on public.press_releases(author_id);
 
 create or replace trigger profiles_set_updated_at
 before update on public.profiles
@@ -230,9 +234,13 @@ with check ((select auth.uid()) = id);
 
 create policy "clubs_select_own" on public.clubs
 for select to authenticated
-using ((select auth.uid()) = owner_id or exists (
+using (is_demo = true or (select auth.uid()) = owner_id or exists (
   select 1 from public.club_members cm where cm.club_id = clubs.id and cm.user_id = (select auth.uid())
 ));
+
+create policy "clubs_select_public_demo" on public.clubs
+for select to anon
+using (is_demo = true);
 
 create policy "clubs_insert_own" on public.clubs
 for insert to authenticated
@@ -256,12 +264,12 @@ with check (user_id = (select auth.uid()) and exists (
 ));
 
 create policy "press_releases_public_published" on public.press_releases
-for select to anon, authenticated
+for select to anon
 using (status = 'published');
 
 create policy "press_releases_owner_all" on public.press_releases
 for select to authenticated
-using (exists (
+using (status = 'published' or exists (
   select 1 from public.clubs c where c.id = press_releases.club_id and c.owner_id = (select auth.uid())
 ));
 
@@ -302,7 +310,15 @@ using (is_demo = true or (metadata->>'public') = 'true');
 
 create policy "feedback_insert_anyone" on public.feedback
 for insert to anon, authenticated
-with check (true);
+with check (
+  status = 'open'
+  and title is not null
+  and description is not null
+  and category in ('Bug', 'Interface', 'Regra do jogo', 'Desempenho', 'Sugestao', 'Outro')
+  and char_length(title) between 3 and 120
+  and char_length(description) between 3 and 1200
+  and (user_id is null or user_id = (select auth.uid()))
+);
 
 create policy "feedback_select_own" on public.feedback
 for select to authenticated
@@ -324,7 +340,40 @@ for select to anon, authenticated
 using (true);
 
 grant usage on schema public to anon, authenticated;
+revoke all privileges on
+  public.profiles,
+  public.clubs,
+  public.club_members,
+  public.press_releases,
+  public.news,
+  public.events,
+  public.feedback,
+  public.app_versions,
+  public.public_club_profiles
+from anon, authenticated;
+
 grant select on public.public_club_profiles to anon, authenticated;
+grant select (
+  id,
+  name,
+  short_name,
+  abbreviation,
+  hashtag,
+  city,
+  state,
+  legal_model,
+  founded_at,
+  primary_color,
+  secondary_color,
+  accent_color,
+  crest_url,
+  mascot,
+  institutional_reputation,
+  sporting_reputation,
+  is_demo,
+  created_at,
+  updated_at
+) on public.clubs to anon;
 grant select, insert, update on public.profiles to authenticated;
 grant select, insert, update on public.clubs to authenticated;
 grant select, insert on public.club_members to authenticated;
@@ -338,21 +387,46 @@ grant select, update on public.feedback to authenticated;
 grant select on public.app_versions to anon, authenticated;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('club-assets', 'club-assets', false, 5242880, array['image/png', 'image/jpeg', 'image/webp'])
+values
+  ('club-crests', 'club-crests', true, 5242880, array['image/png', 'image/jpeg', 'image/webp']),
+  ('club-uniforms', 'club-uniforms', true, 5242880, array['image/png', 'image/jpeg', 'image/webp']),
+  ('feedback-attachments', 'feedback-attachments', false, 10485760, array['image/png', 'image/jpeg', 'image/webp'])
 on conflict (id) do nothing;
 
-create policy "club_assets_select_own_folder" on storage.objects
-for select to authenticated
-using (bucket_id = 'club-assets' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create policy "club_public_assets_read" on storage.objects
+for select to anon, authenticated
+using (bucket_id in ('club-crests', 'club-uniforms'));
 
 create policy "club_assets_insert_own_folder" on storage.objects
 for insert to authenticated
-with check (bucket_id = 'club-assets' and (storage.foldername(name))[1] = (select auth.uid())::text);
+with check (
+  bucket_id in ('club-crests', 'club-uniforms')
+  and (storage.foldername(name))[1] = (select auth.uid())::text
+);
 
 create policy "club_assets_update_own_folder" on storage.objects
 for update to authenticated
-using (bucket_id = 'club-assets' and (storage.foldername(name))[1] = (select auth.uid())::text)
-with check (bucket_id = 'club-assets' and (storage.foldername(name))[1] = (select auth.uid())::text);
+using (
+  bucket_id in ('club-crests', 'club-uniforms')
+  and (storage.foldername(name))[1] = (select auth.uid())::text
+)
+with check (
+  bucket_id in ('club-crests', 'club-uniforms')
+  and (storage.foldername(name))[1] = (select auth.uid())::text
+);
+
+create policy "feedback_attachments_select_own_folder" on storage.objects
+for select to authenticated
+using (bucket_id = 'feedback-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+create policy "feedback_attachments_insert_own_folder" on storage.objects
+for insert to authenticated
+with check (bucket_id = 'feedback-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+create policy "feedback_attachments_update_own_folder" on storage.objects
+for update to authenticated
+using (bucket_id = 'feedback-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text)
+with check (bucket_id = 'feedback-attachments' and (storage.foldername(name))[1] = (select auth.uid())::text);
 
 insert into public.app_versions (version, environment, release_notes)
 values ('0.1.0', 'beta', 'Primeira beta online com autenticacao, clubes, imprensa minima, feedback e status.')

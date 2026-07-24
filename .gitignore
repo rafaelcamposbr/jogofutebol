@@ -13,3 +13,7 @@ out
 .codex-next-dev-*.err
 .codex-next-start-*.out
 .codex-next-start-*.err
+
+.vercel
+.env*
+!.env.example

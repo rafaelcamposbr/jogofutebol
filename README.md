@@ -9,7 +9,7 @@ Beta online do jogo de gestao de clubes de futebol. A aplicacao migrou o prototi
 - React 19
 - Supabase Auth
 - Supabase PostgreSQL
-- Supabase Storage preparado para escudos e uniformes
+- Supabase Storage preparado para escudos, uniformes e anexos de feedback
 - Vercel
 
 Tailwind CSS nao foi adicionado porque o projeto original nao usava Tailwind.
@@ -18,9 +18,9 @@ Tailwind CSS nao foi adicionado porque o projeto original nao usava Tailwind.
 
 - Node.js 20.9 ou superior
 - npm
-- Projeto Supabase
+- Projeto Supabase do jogo
 - Conta Vercel
-- Repositorio GitHub
+- Repositorio GitHub, quando quiser habilitar deploy automatico por push
 
 ## Instalacao local
 
@@ -42,17 +42,17 @@ NEXT_PUBLIC_APP_ENV=beta
 NEXT_PUBLIC_APP_VERSION=0.1.0
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` e somente servidor. Nunca use essa chave em componentes client-side nem em variaveis `NEXT_PUBLIC_`.
+`SUPABASE_SERVICE_ROLE_KEY` e somente servidor e hoje e opcional no codigo. Nunca use essa chave em componentes client-side nem em variaveis `NEXT_PUBLIC_`.
 
 ## Supabase
 
-1. Crie ou selecione um projeto Supabase do jogo.
+1. Use o projeto Supabase exclusivo do jogo: `Projeto Jogo de Futebol Beta`.
 2. Aplique `supabase/migrations/20260724103000_initial_beta_schema.sql`.
 3. Rode `supabase/seed.sql` para carregar dados demonstrativos.
 4. Em Authentication, habilite e-mail/senha.
 5. Cadastre a URL do app em Auth URL Configuration:
    - Local: `http://localhost:3000`
-   - Producao: URL da Vercel
+   - Producao: `https://projeto-jogo-futebol-beta.vercel.app`
    - Redirect: `/auth/callback`
 
 ## Scripts
@@ -95,8 +95,10 @@ No navegador, use o modo visitante novamente em `/experimentar`. Para banco, rea
 - O prototipo principal ainda roda como camada legada em `public/legacy`.
 - Algumas acoes do jogo continuam locais no navegador durante a beta.
 - Multiplayer esportivo, partidas, campeonatos, mercado real entre clubes e economia definitiva nao foram implementados nesta etapa.
-- Deploy real exige configurar Supabase/Vercel/GitHub com os segredos corretos.
+- Deploy automatico por GitHub ainda depende da criacao/conexao de um repositorio remoto.
 
 ## Deploy
 
-Veja `docs/deployment.md`.
+Beta publicada: `https://projeto-jogo-futebol-beta.vercel.app`.
+
+Veja `docs/deployment.md` e `docs/infrastructure.md`.

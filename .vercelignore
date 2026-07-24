@@ -1,0 +1,11 @@
+.env
+.env.*
+.vercel
+.next
+node_modules
+dist
+out
+*.log
+*.tsbuildinfo
+.codex-next-*.out
+.codex-next-*.err
