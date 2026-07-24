@@ -1,0 +1,48 @@
+import Script from "next/script";
+import { APP_ENV, APP_VERSION } from "@/lib/env";
+import { buildGuestLegacyState, buildLegacyState } from "@/lib/game/legacy-state";
+
+type LegacyGameProps = {
+  initialState?: ReturnType<typeof buildLegacyState>;
+  guest?: boolean;
+};
+
+export function LegacyGame({ initialState, guest = false }: LegacyGameProps) {
+  const state = initialState || buildGuestLegacyState();
+  const bootstrap = `
+    window.__APP_ENV__ = ${JSON.stringify(APP_ENV)};
+    window.__APP_VERSION__ = ${JSON.stringify(APP_VERSION)};
+    window.__GUEST_MODE__ = ${JSON.stringify(guest)};
+    (function(){
+      try {
+        var key = "football-club-manager-prototype-v1";
+        var nextState = ${JSON.stringify(state)};
+        var current = window.localStorage.getItem(key);
+        if (${JSON.stringify(guest)} || !current) {
+          window.localStorage.setItem(key, JSON.stringify(nextState));
+          return;
+        }
+        var parsed = JSON.parse(current);
+        if (!parsed.club || parsed.club.supabaseClubId !== nextState.club.supabaseClubId) {
+          window.localStorage.setItem(key, JSON.stringify(nextState));
+        }
+      } catch (error) {
+        console.warn("Falha ao preparar estado inicial", error);
+      }
+    })();
+  `;
+
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{ __html: bootstrap }} />
+      {guest ? (
+        <div className="guest-warning" role="status">
+          Voce esta no modo visitante. Os dados desta sessao sao demonstrativos e nao serao gravados como progresso real.
+        </div>
+      ) : null}
+      <div id="app" className="app-shell" suppressHydrationWarning />
+      <div id="toast-region" className="toast-region" aria-live="polite" />
+      <Script src="/legacy/script.js" strategy="afterInteractive" />
+    </>
+  );
+}
