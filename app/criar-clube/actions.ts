@@ -12,7 +12,7 @@ async function uniqueHashtag(base: string, supabase: NonNullable<Awaited<ReturnT
   const cleanBase = base || "#clube";
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const candidate = attempt === 0 ? cleanBase : `${cleanBase}${attempt + 1}`;
-    const { data } = await supabase.from("clubs").select("id").eq("hashtag", candidate).maybeSingle();
+    const { data } = await supabase.from("public_club_profiles").select("id").eq("hashtag", candidate).maybeSingle();
     if (!data) return candidate;
   }
   return `${cleanBase}${Date.now().toString(36)}`;
