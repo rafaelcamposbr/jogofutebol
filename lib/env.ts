@@ -39,3 +39,7 @@ export function getSiteUrl(requestOrigin?: string) {
 export function isBeta() {
   return APP_ENV.toLowerCase() === "beta";
 }
+
+export function isProblemReportingEnabled() {
+  return process.env.ENABLE_PROBLEM_REPORTING === "true";
+}

@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { createSupabaseBrowserClient, hasBrowserSupabaseEnv } from "@/lib/supabase/browser";
 import {
   formatBrazilianWhatsapp,
+  getUsernameValidationError,
   normalizeUsername,
-  RESERVED_USERNAMES,
   type SignupErrors,
 } from "@/lib/auth/validation";
 
@@ -20,9 +20,9 @@ type ApiResult = {
 };
 
 const copy = {
-  login: { title: "Logar", submit: "Entrar" },
-  signup: { title: "Cadastrar", submit: "Criar conta" },
-  reset: { title: "Recuperar senha", submit: "Enviar recuperacao" },
+  login: { title: "Logar", submit: "Entrar", pending: "Entrando..." },
+  signup: { title: "Cadastrar", submit: "Criar conta", pending: "Criando conta..." },
+  reset: { title: "Recuperar senha", submit: "Enviar recuperacao", pending: "Enviando..." },
 };
 
 function FieldError({ message }: { message?: string }) {
@@ -30,19 +30,27 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<{ text: string; kind: "error" | "success" } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<SignupErrors>({});
   const [pending, setPending] = useState(false);
   const [username, setUsername] = useState("");
-  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "unavailable">("idle");
+  const [usernameStatus, setUsernameStatus] = useState<
+    "idle" | "invalid" | "checking" | "available" | "unavailable" | "error"
+  >("idle");
   const [whatsapp, setWhatsapp] = useState("");
+  const usernameRequest = useRef(0);
   const configured = hasBrowserSupabaseEnv();
 
   useEffect(() => {
     if (mode !== "signup") return;
+    const requestId = ++usernameRequest.current;
     const normalized = normalizeUsername(username);
-    if (!/^[a-z0-9._]{3,24}$/.test(normalized) || RESERVED_USERNAMES.has(normalized)) {
+    if (!username) {
       setUsernameStatus("idle");
+      return;
+    }
+    if (getUsernameValidationError(username)) {
+      setUsernameStatus("invalid");
       return;
     }
 
@@ -54,12 +62,18 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           signal: controller.signal,
           cache: "no-store",
         });
-        const result = (await response.json()) as { available?: boolean };
-        setUsernameStatus(response.ok && result.available ? "available" : "unavailable");
+        const result = (await response.json().catch(() => ({}))) as { available?: boolean | null };
+        if (requestId !== usernameRequest.current) return;
+        if (!response.ok || typeof result.available !== "boolean") {
+          setUsernameStatus("error");
+          return;
+        }
+        setUsernameStatus(result.available ? "available" : "unavailable");
       } catch (error) {
-        if (!(error instanceof DOMException && error.name === "AbortError")) setUsernameStatus("idle");
+        if (requestId !== usernameRequest.current) return;
+        if (!(error instanceof DOMException && error.name === "AbortError")) setUsernameStatus("error");
       }
-    }, 400);
+    }, 500);
 
     return () => {
       controller.abort();
@@ -69,17 +83,19 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
+    if (pending) return;
+    setMessage(null);
     setFieldErrors({});
 
     if (!configured) {
-      setMessage("Supabase ainda nao configurado neste ambiente.");
+      setMessage({ text: "Supabase ainda nao configurado neste ambiente.", kind: "error" });
       return;
     }
 
     const form = event.currentTarget;
     const data = new FormData(form);
     setPending(true);
+    let keepPending = false;
 
     try {
       if (mode === "reset") {
@@ -89,7 +105,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           redirectTo: `${window.location.origin}/auth/callback?next=/atualizar-senha`,
         });
         if (error) throw error;
-        setMessage("Se o e-mail estiver cadastrado, enviaremos as instrucoes de recuperacao.");
+        setMessage({
+          text: "Se o e-mail estiver cadastrado, enviaremos as instrucoes de recuperacao.",
+          kind: "success",
+        });
         form.reset();
         return;
       }
@@ -117,16 +136,30 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       const result = (await response.json().catch(() => ({}))) as ApiResult;
 
       if (!response.ok || !result.ok) {
-        setFieldErrors(result.fields || {});
-        setMessage(result.message || "Nao foi possivel concluir a acao.");
+        const fields = result.fields || {};
+        setFieldErrors(fields);
+        setMessage({ text: result.message || "Nao foi possivel concluir a acao.", kind: "error" });
+        const firstField = Object.keys(fields).find((field) => field !== "form");
+        if (firstField) {
+          window.requestAnimationFrame(() => {
+            form.querySelector<HTMLInputElement>(`[name="${firstField}"]`)?.focus();
+          });
+        }
         return;
       }
 
-      window.location.assign(result.next || (mode === "signup" ? "/criar-clube" : "/central"));
+      keepPending = true;
+      setMessage({
+        text: mode === "signup" ? "Conta criada com sucesso." : "Login realizado com sucesso.",
+        kind: "success",
+      });
+      window.setTimeout(() => {
+        window.location.assign(result.next || (mode === "signup" ? "/criar-clube" : "/central"));
+      }, 500);
     } catch {
-      setMessage("Nao foi possivel concluir a acao. Tente novamente.");
+      setMessage({ text: "Nao foi possivel concluir a acao. Tente novamente.", kind: "error" });
     } finally {
-      setPending(false);
+      if (!keepPending) setPending(false);
     }
   }
 
@@ -149,17 +182,24 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
               <input
                 name="username"
                 value={username}
-                onChange={(event) => setUsername(event.target.value)}
+                onChange={(event) => {
+                  setUsername(event.target.value);
+                  setFieldErrors((current) => ({ ...current, username: undefined }));
+                }}
                 minLength={3}
                 maxLength={24}
+                pattern="[A-Za-z0-9._]{3,24}"
                 autoComplete="username"
                 required
                 aria-describedby="username-status"
+                aria-invalid={usernameStatus === "invalid" || usernameStatus === "unavailable" || Boolean(fieldErrors.username)}
               />
               <span id="username-status" className={`field-status ${usernameStatus}`} aria-live="polite">
                 {usernameStatus === "checking" ? "Verificando disponibilidade..." : null}
-                {usernameStatus === "available" ? "Nome disponivel." : null}
-                {usernameStatus === "unavailable" ? "Nome indisponivel." : null}
+                {usernameStatus === "available" ? "Nome de usuario disponivel." : null}
+                {usernameStatus === "unavailable" ? "Este nome de usuario ja esta em uso." : null}
+                {usernameStatus === "invalid" ? getUsernameValidationError(username) : null}
+                {usernameStatus === "error" ? "Nao foi possivel verificar o nome de usuario. Tente novamente." : null}
               </span>
               <FieldError message={fieldErrors.username} />
             </label>
@@ -226,9 +266,21 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           </label>
         ) : null}
 
-        {message ? <p className="feedback-message error" role="alert">{message}</p> : null}
-        <button className="auth-submit" type="submit" disabled={pending || !configured || usernameStatus === "checking"}>
-          {pending ? "Aguarde..." : copy[mode].submit}
+        {message ? (
+          <p className={`feedback-message ${message.kind === "success" ? "sent" : "error"}`} role={message.kind === "error" ? "alert" : "status"}>
+            {message.text}
+          </p>
+        ) : null}
+        <button
+          className="auth-submit"
+          type="submit"
+          disabled={
+            pending ||
+            !configured ||
+            (mode === "signup" && ["invalid", "checking", "unavailable"].includes(usernameStatus))
+          }
+        >
+          {pending ? copy[mode].pending : copy[mode].submit}
         </button>
       </form>
       <div className="link-row auth-links">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { APP_ENV, APP_VERSION } from "@/lib/env";
+import { APP_ENV, APP_VERSION, isProblemReportingEnabled } from "@/lib/env";
 import { FeedbackButton } from "@/components/FeedbackButton";
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Link href="#conteudo">Pular para o conteudo</Link>
         </div>
         <div id="conteudo">{children}</div>
-        <FeedbackButton />
+        {isProblemReportingEnabled() ? <FeedbackButton /> : null}
       </body>
     </html>
   );

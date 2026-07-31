@@ -9,7 +9,7 @@ export default function HomePage() {
         <h1>Simulador Online de Gestao de Clube</h1>
         <p>
           Primeira beta remota para testar criacao de clubes, navegacao do prototipo,
-          imprensa, perfil publico e feedbacks.
+          imprensa, perfil publico e progresso persistente.
         </p>
       </section>
       <section className="home-entry" aria-label="Escolha como acessar">

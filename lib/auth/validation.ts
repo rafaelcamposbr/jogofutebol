@@ -60,6 +60,21 @@ export function normalizeUsername(value: string) {
   return value.trim().toLowerCase();
 }
 
+export function getUsernameValidationError(value: string) {
+  const username = value.trim();
+  const normalized = normalizeUsername(username);
+
+  if (!/^[A-Za-z0-9._]{3,24}$/.test(username) || /[\x00-\x1f\x7f]/.test(username)) {
+    return "Use de 3 a 24 caracteres: letras, numeros, ponto ou sublinhado.";
+  }
+
+  if (RESERVED_USERNAMES.has(normalized)) {
+    return "Este nome de usuario e reservado.";
+  }
+
+  return null;
+}
+
 export function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
@@ -116,11 +131,8 @@ export function validateSignupInput(input: SignupInput): {
   const whatsapp = normalizeBrazilianWhatsapp(input.whatsapp);
   const errors: SignupErrors = {};
 
-  if (!/^[A-Za-z0-9._]{3,24}$/.test(username) || /[\x00-\x1f\x7f]/.test(username)) {
-    errors.username = "Use de 3 a 24 caracteres: letras, numeros, ponto ou sublinhado.";
-  } else if (RESERVED_USERNAMES.has(usernameNormalized)) {
-    errors.username = "Este nome de usuario e reservado.";
-  }
+  const usernameError = getUsernameValidationError(username);
+  if (usernameError) errors.username = usernameError;
 
   if (firstName.length < 2 || firstName.length > 60 || !/\p{L}/u.test(firstName)) {
     errors.firstName = "Informe um nome valido com 2 a 60 caracteres.";

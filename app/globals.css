@@ -129,7 +129,9 @@
 }
 
 .field-error,
-.field-status.unavailable {
+.field-status.unavailable,
+.field-status.invalid,
+.field-status.error {
   color: #8d2424;
 }
 

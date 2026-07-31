@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isProblemReportingEnabled } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const categories = new Set(["Bug", "Interface", "Regra do jogo", "Desempenho", "Sugestao", "Outro"]);
 
 export async function POST(request: NextRequest) {
+  if (!isProblemReportingEnabled()) {
+    return NextResponse.json({ error: "Recurso indisponivel." }, { status: 404 });
+  }
+
   const payload = await request.json().catch(() => null);
   const title = String(payload?.title || "").trim().slice(0, 120);
   const description = String(payload?.description || "").trim().slice(0, 1200);

@@ -26,6 +26,7 @@ Aplicado:
 - `supabase/migrations/20260731154908_complete_auth_profiles_and_verifications.sql`
 - `supabase/migrations/20260731155028_explicitly_deny_verification_challenges.sql`
 - `supabase/migrations/20260731155259_fix_whatsapp_e164_validation.sql`
+- `supabase/migrations/20260731220701_secure_username_availability_disable_feedback.sql`
 - `supabase/seed.sql`
 
 Tabelas publicas com RLS ativo:
@@ -55,8 +56,8 @@ Validacoes feitas:
 - API publica retorna `public_club_profiles`.
 - API publica nega `clubs.cash_balance` para `anon`.
 - API publica nega `profiles` para `anon`.
-- Insert anonimo valido em `feedback` funciona com retorno minimo.
-- Insert anonimo invalido em `feedback` e bloqueado por RLS/checks.
+- Novos inserts em `feedback` estao bloqueados para `anon` e `authenticated`; registros historicos sao preservados.
+- A RPC `is_username_available(text)` retorna apenas um booleano e nao expoe dados de perfil.
 
 ## Vercel
 

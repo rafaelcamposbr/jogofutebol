@@ -48,9 +48,12 @@ OPENAI_API_KEY=
 OPENAI_STAFF_MODEL=gpt-5.6
 NEXT_PUBLIC_APP_ENV=beta
 NEXT_PUBLIC_APP_VERSION=0.1.0
+ENABLE_PROBLEM_REPORTING=false
 ```
 
-`SUPABASE_SECRET_KEY` e obrigatoria para cadastro, disponibilidade e login unificado. Ela e somente servidor; nunca use essa chave em componentes client-side ou variaveis `NEXT_PUBLIC_`. O codigo aceita `SUPABASE_SERVICE_ROLE_KEY` apenas como compatibilidade legada.
+`SUPABASE_SECRET_KEY` e obrigatoria para cadastro e login unificado. Ela e somente servidor; nunca use essa chave em componentes client-side ou variaveis `NEXT_PUBLIC_`. O codigo aceita `SUPABASE_SERVICE_ROLE_KEY` apenas como compatibilidade legada. A disponibilidade de nome usa uma RPC booleana com acesso publico controlado.
+
+`ENABLE_PROBLEM_REPORTING` permanece `false`: o botao e a API de reporte estao desativados e o banco preserva apenas o historico existente.
 
 ## Supabase
 
@@ -94,7 +97,7 @@ npm run typecheck
 - Reunioes com interpretacao estruturada, memoria, promessas e efeitos deterministas
 - Cursos com custos, tolerancia, repeticao e saturacao por conteudo
 - Central de Orientacoes e tutorial progressivo com coordenador interino
-- Feedback fixo com gravacao em `/api/feedback`
+- Reporte de problema desativado por flag de servidor e bloqueado no banco
 - Status publico em `/status`
 - Ambiente Beta e versao no cabecalho
 

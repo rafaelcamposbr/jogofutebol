@@ -1,33 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { normalizeUsername, RESERVED_USERNAMES } from "@/lib/auth/validation";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getUsernameValidationError, normalizeUsername } from "@/lib/auth/validation";
+import { createSupabaseStatelessClient } from "@/lib/supabase/admin";
+
+const noStore = { "Cache-Control": "no-store" };
 
 export async function GET(request: NextRequest) {
-  const username = normalizeUsername(request.nextUrl.searchParams.get("username") || "");
-  if (!/^[a-z0-9._]{3,24}$/.test(username) || RESERVED_USERNAMES.has(username)) {
+  const rawUsername = request.nextUrl.searchParams.get("username") || "";
+  const username = normalizeUsername(rawUsername);
+  if (getUsernameValidationError(rawUsername)) {
+    return NextResponse.json({ available: false }, { status: 422, headers: noStore });
+  }
+
+  const supabase = createSupabaseStatelessClient();
+  if (!supabase) {
     return NextResponse.json(
-      { available: false },
-      { headers: { "Cache-Control": "no-store" } },
+      { available: null },
+      { status: 503, headers: noStore },
     );
   }
 
-  const admin = createSupabaseAdminClient();
-  if (!admin) {
-    return NextResponse.json(
-      { available: false, unavailable: true },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
+  const { data, error } = await supabase.rpc("is_username_available", { p_username: username });
+
+  if (error || typeof data !== "boolean") {
+    return NextResponse.json({ available: null }, { status: 503, headers: noStore });
   }
 
-  const { data, error } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("username_normalized", username)
-    .limit(1)
-    .maybeSingle();
-
-  return NextResponse.json(
-    { available: !data && !error },
-    { status: error ? 503 : 200, headers: { "Cache-Control": "no-store" } },
-  );
+  return NextResponse.json({ available: data }, { headers: noStore });
 }

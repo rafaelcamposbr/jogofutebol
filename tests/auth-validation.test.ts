@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   classifyLoginIdentifier,
   formatBrazilianWhatsapp,
+  getUsernameValidationError,
   normalizeBrazilianWhatsapp,
   normalizeUsername,
   safeNextPath,
@@ -52,6 +53,16 @@ test("usuario e login nao diferenciam maiusculas", () => {
     type: "username",
     normalized: "rafael_31",
   });
+});
+
+test("valida formato, tamanho e nomes reservados de usuario", () => {
+  assert.equal(getUsernameValidationError("jogador.31"), null);
+  assert.equal(getUsernameValidationError(" JOGADOR_31 "), null);
+  assert.match(getUsernameValidationError("ab") || "", /3 a 24/);
+  assert.match(getUsernameValidationError("a".repeat(25)) || "", /3 a 24/);
+  assert.match(getUsernameValidationError("nome com espaco") || "", /letras/);
+  assert.match(getUsernameValidationError("nome-com-hifen") || "", /letras/);
+  assert.match(getUsernameValidationError("Suporte") || "", /reservado/);
 });
 
 test("classifica e normaliza e-mail e WhatsApp com mascara", () => {
