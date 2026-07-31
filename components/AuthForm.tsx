@@ -24,6 +24,16 @@ const copy = {
   },
 };
 
+function isStrongSignupPassword(password: string) {
+  return (
+    password.length >= 10 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
+
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
@@ -54,8 +64,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
       }
 
       if (mode === "signup") {
+        if (!isStrongSignupPassword(password)) {
+          setMessage("Use uma senha com 10 ou mais caracteres, incluindo maiuscula, minuscula, numero e simbolo.");
+          return;
+        }
+
         const displayName = String(data.get("displayName") || "").trim();
-        const { error } = await supabase.auth.signUp({
+        const { data: signupData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -64,6 +79,10 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
           },
         });
         if (error) throw error;
+        if (signupData.session) {
+          window.location.href = "/central";
+          return;
+        }
         setMessage(copy.signup.success);
         form.reset();
         return;
@@ -104,7 +123,13 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         {mode !== "reset" ? (
           <label>
             Senha
-            <input name="password" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={6} required />
+            <input
+              name="password"
+              type="password"
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              minLength={mode === "signup" ? 10 : 6}
+              required
+            />
           </label>
         ) : null}
         {message ? <p className={`feedback-message ${message.includes("nao") || message.includes("Nao") ? "error" : "sent"}`}>{message}</p> : null}

@@ -7,11 +7,6 @@ export function getPublicSupabaseEnv() {
   return { url, anonKey, configured: Boolean(url && anonKey) };
 }
 
-export function getServiceSupabaseEnv() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  return { ...getPublicSupabaseEnv(), serviceRoleKey, serviceConfigured: Boolean(serviceRoleKey) };
-}
-
 export function isBeta() {
   return APP_ENV.toLowerCase() === "beta";
 }
