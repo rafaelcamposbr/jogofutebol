@@ -2,20 +2,20 @@
 
 Este guia publica a beta na Vercel usando Supabase como Auth, banco e storage futuro.
 
-Estado atual em 2026-07-24:
+Estado atual em 2026-07-31:
 
 - Supabase criado: `Projeto Jogo de Futebol Beta` (`vvoisdgpqbzbncjmnhuq`, `sa-east-1`)
 - Vercel criado: `rcawork/projeto-jogo-futebol-beta`
 - Producao: `https://projeto-jogo-futebol-beta.vercel.app`
-- GitHub remoto: ainda nao criado/conectado
+- GitHub remoto: `https://github.com/rafaelcamposbr/jogofutebol.git`
 
 ## 1. GitHub
 
-O repositorio remoto ainda precisa ser criado porque o ambiente atual nao tinha `gh`, `GITHUB_TOKEN`/`GH_TOKEN` nem ferramenta GitHub para criar repositorios. Quando o repo existir:
+Repositorio:
 
 ```bash
 git branch -M main
-git remote add origin https://github.com/rafaelcamposbr/projeto-jogo-futebol.git
+git remote add origin https://github.com/rafaelcamposbr/jogofutebol.git
 git push -u origin main
 ```
 
@@ -32,13 +32,7 @@ URL: https://vvoisdgpqbzbncjmnhuq.supabase.co
 Regiao: sa-east-1
 ```
 
-No SQL Editor ou via CLI, aplique:
-
-```text
-supabase/migrations/20260724103000_initial_beta_schema.sql
-```
-
-Depois aplique:
+No SQL Editor, MCP ou CLI, aplique todas as migrations versionadas e depois:
 
 ```text
 supabase/seed.sql
@@ -64,7 +58,22 @@ NEXT_PUBLIC_APP_ENV=beta
 NEXT_PUBLIC_APP_VERSION=0.1.0
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` nao foi configurada porque a chave service-role nao estava disponivel nas ferramentas atuais e o codigo nao depende dela nesta etapa. Se for adicionada depois, use somente como server-side secret.
+Obrigatoria para cadastro e login unificado:
+
+```text
+SUPABASE_SECRET_KEY
+NEXT_PUBLIC_SITE_URL=https://projeto-jogo-futebol-beta.vercel.app
+```
+
+Necessarias para verificacoes reais:
+
+```text
+RESEND_API_KEY
+EMAIL_FROM
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_VERIFY_SERVICE_SID
+```
 
 ## 4. Vercel
 
@@ -76,7 +85,7 @@ Project: projeto-jogo-futebol-beta
 Production URL: https://projeto-jogo-futebol-beta.vercel.app
 ```
 
-Conecte o repositorio GitHub na Vercel quando o repo remoto existir.
+O repositorio remoto ja existe. Confirme no painel da Vercel que a integracao Git aponta para `rafaelcamposbr/jogofutebol`, branch de producao `main`; nao crie outro projeto.
 
 Configuracoes esperadas:
 

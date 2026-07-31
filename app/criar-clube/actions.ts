@@ -44,44 +44,31 @@ export async function createClubAction(_previous: CreateClubState, formData: For
   const { data: existingClub } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
   if (existingClub) redirect("/central");
 
-  const hashtag = await uniqueHashtag(makeClubHashtag(shortName), supabase);
-  const { data: club, error: clubError } = await supabase
-    .from("clubs")
-    .insert({
-      owner_id: user.id,
-      name,
-      short_name: shortName,
-      abbreviation,
-      hashtag,
-      city,
-      state,
-      legal_model: legalModel,
-      primary_color: primaryColor,
-      secondary_color: secondaryColor,
-      accent_color: accentColor,
-      mascot,
-      cash_balance: 0,
-      institutional_reputation: 1,
-      financial_reputation: 1,
-      sporting_reputation: 0.5,
-    })
-    .select("id")
-    .single();
+  let clubId: string | null = null;
+  for (let attempt = 0; attempt < 3 && !clubId; attempt += 1) {
+    const hashtag = await uniqueHashtag(makeClubHashtag(shortName), supabase);
+    const { data, error } = await supabase.rpc("create_club_with_foundation", {
+      p_name: name,
+      p_short_name: shortName,
+      p_abbreviation: abbreviation,
+      p_hashtag: hashtag,
+      p_city: city,
+      p_state: state,
+      p_legal_model: legalModel,
+      p_primary_color: primaryColor,
+      p_secondary_color: secondaryColor,
+      p_accent_color: accentColor,
+      p_mascot: mascot || null,
+    });
 
-  if (clubError || !club) return { error: clubError?.message || "Nao foi possivel criar o clube." };
+    if (!error && typeof data === "string") {
+      clubId = data;
+      break;
+    }
+    if (error?.code !== "23505") return { error: "Nao foi possivel criar o clube." };
+  }
 
-  await Promise.all([
-    supabase.from("club_members").insert({ club_id: club.id, user_id: user.id, role: "owner" }),
-    supabase.from("events").insert({
-      club_id: club.id,
-      type: "foundation",
-      title: "Clube fundado",
-      description: `${name} foi fundado na beta online.`,
-      starts_at: new Date().toISOString(),
-      status: "completed",
-      financial_impact: 0,
-    }),
-  ]);
+  if (!clubId) return { error: "Nao foi possivel reservar a identificacao publica do clube." };
 
   redirect("/central");
 }

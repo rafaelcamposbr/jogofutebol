@@ -8,8 +8,8 @@ export function AuthPageShell({ children }: { children: React.ReactNode }) {
         <BetaBadge />
         <h1>Gestao de clube do zero</h1>
         <p>
-          Beta compartilhavel do simulador. Entre com e-mail e senha para salvar um clube no Supabase,
-          ou use o modo visitante para navegar com dados demonstrativos.
+          Crie sua conta, funde um clube e continue de onde parou. Seu progresso principal fica associado
+          a sua conta no Supabase.
         </p>
         <div className="auth-actions">
           <Link href="/status">Ver status</Link>

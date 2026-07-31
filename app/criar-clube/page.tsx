@@ -3,6 +3,8 @@ import { BetaBadge } from "@/components/BetaBadge";
 import { CreateClubForm } from "@/components/CreateClubForm";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function CreateClubPage() {
   const supabase = await createSupabaseServerClient();
   if (!supabase) {

@@ -37,19 +37,25 @@ Acesse `http://localhost:3000`.
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SECRET_KEY=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+RESEND_API_KEY=
+EMAIL_FROM=
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_VERIFY_SERVICE_SID=
 NEXT_PUBLIC_APP_ENV=beta
 NEXT_PUBLIC_APP_VERSION=0.1.0
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` e somente servidor e hoje e opcional no codigo. Nunca use essa chave em componentes client-side nem em variaveis `NEXT_PUBLIC_`.
+`SUPABASE_SECRET_KEY` e obrigatoria para cadastro, disponibilidade e login unificado. Ela e somente servidor; nunca use essa chave em componentes client-side ou variaveis `NEXT_PUBLIC_`. O codigo aceita `SUPABASE_SERVICE_ROLE_KEY` apenas como compatibilidade legada.
 
 ## Supabase
 
 1. Use o projeto Supabase exclusivo do jogo: `Projeto Jogo de Futebol Beta`.
-2. Aplique `supabase/migrations/20260724103000_initial_beta_schema.sql`.
+2. Aplique as migrations de `supabase/migrations` na ordem dos timestamps.
 3. Rode `supabase/seed.sql` para carregar dados demonstrativos.
-4. Em Authentication, habilite e-mail/senha.
+4. Em Authentication, habilite e-mail/senha e deixe a confirmacao nativa desativada.
 5. Cadastre a URL do app em Auth URL Configuration:
    - Local: `http://localhost:3000`
    - Producao: `https://projeto-jogo-futebol-beta.vercel.app`
@@ -67,9 +73,13 @@ npm run typecheck
 ## Fluxos implementados
 
 - Cadastro por e-mail/senha via Supabase Auth
-- Login
+- Perfil completo com usuario unico e WhatsApp E.164
+- Login por nome de usuario, e-mail ou WhatsApp
 - Logout
 - Recuperacao de senha
+- Verificacao propria de e-mail para liberar Imprensa
+- Verificacao por WhatsApp para liberar Escritorio
+- Minha Conta com troca segura de e-mail e WhatsApp
 - Redirecionamento para `/criar-clube` quando o usuario autenticado nao possui clube
 - Criacao de clube real no Supabase
 - Registro de evento de fundacao
@@ -95,10 +105,11 @@ No navegador, use o modo visitante novamente em `/experimentar`. Para banco, rea
 - O prototipo principal ainda roda como camada legada em `public/legacy`.
 - Algumas acoes do jogo continuam locais no navegador durante a beta.
 - Multiplayer esportivo, partidas, campeonatos, mercado real entre clubes e economia definitiva nao foram implementados nesta etapa.
-- Deploy automatico por GitHub ainda depende da criacao/conexao de um repositorio remoto.
+- Envio real de e-mail exige Resend configurado.
+- OTP real de WhatsApp exige Twilio Verify, WhatsApp Sender e credenciais configuradas.
 
 ## Deploy
 
 Beta publicada: `https://projeto-jogo-futebol-beta.vercel.app`.
 
-Veja `docs/deployment.md` e `docs/infrastructure.md`.
+Veja `docs/authentication.md`, `docs/deployment.md` e `docs/infrastructure.md`.

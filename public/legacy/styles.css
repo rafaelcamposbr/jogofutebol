@@ -609,6 +609,20 @@ button:focus-visible {
   font-weight: 950;
 }
 
+.nav-lock {
+  margin-left: auto;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.nav-lock + .nav-count {
+  margin-left: 0;
+}
+
+.nav-button.locked {
+  color: rgba(255, 255, 255, 0.62);
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding: 14px 8px 4px;

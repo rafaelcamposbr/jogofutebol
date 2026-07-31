@@ -1,6 +1,6 @@
 # Infraestrutura da Beta
 
-Ultima atualizacao: 2026-07-24.
+Ultima atualizacao: 2026-07-31.
 
 ## Supabase
 
@@ -19,10 +19,14 @@ O projeto `dommus-casa commerce` nao foi alterado.
 
 Aplicado:
 
-- `supabase/migrations/20260724103000_initial_beta_schema.sql`
+- `supabase/migrations/20260724142221_initial_beta_schema.sql`
+- `supabase/migrations/20260724142422_harden_rls_and_indexes.sql`
+- `supabase/migrations/20260724142626_restrict_public_table_grants.sql`
+- `supabase/migrations/20260725142511_fix_clubs_rls_infinite_recursion.sql`
+- `supabase/migrations/20260731154908_complete_auth_profiles_and_verifications.sql`
+- `supabase/migrations/20260731155028_explicitly_deny_verification_challenges.sql`
+- `supabase/migrations/20260731155259_fix_whatsapp_e164_validation.sql`
 - `supabase/seed.sql`
-- Migracao remota `harden_rls_and_indexes`
-- Migracao remota `restrict_public_table_grants`
 
 Tabelas publicas com RLS ativo:
 
@@ -34,6 +38,7 @@ Tabelas publicas com RLS ativo:
 - `events`
 - `feedback`
 - `app_versions`
+- `verification_challenges`
 
 Buckets:
 
@@ -43,7 +48,8 @@ Buckets:
 
 Validacoes feitas:
 
-- Security advisor sem lints.
+- Security advisor sem alerta de RLS nas tabelas da aplicacao. A protecao contra senhas vazadas permanece como recomendacao do Auth e nao esta disponivel no plano Free atual.
+- `verification_challenges` tem RLS habilitado, politica explicita de negacao e nenhum grant para `anon` ou `authenticated`.
 - Performance advisor apenas com `unused_index`, esperado em banco novo sem trafego.
 - API publica retorna `app_versions`.
 - API publica retorna `public_club_profiles`.
@@ -60,19 +66,23 @@ Projeto criado:
 Team: rcawork
 Project: projeto-jogo-futebol-beta
 Production URL: https://projeto-jogo-futebol-beta.vercel.app
-Inspect URL: https://vercel.com/rcawork/projeto-jogo-futebol-beta/2RGtXoNvbYB5bWRodZQ4EtDn3oWq
 ```
 
 Variaveis configuradas em Production, Preview e Development:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SECRET_KEY` (somente servidor)
+- `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_APP_ENV`
 - `NEXT_PUBLIC_APP_VERSION`
 
-Nao foi configurada:
+Dependem dos provedores externos e devem permanecer ausentes ate haver credenciais reais:
 
-- `SUPABASE_SERVICE_ROLE_KEY`: chave service-role nao estava disponivel nas ferramentas atuais e o codigo nao depende dela nesta beta.
+- `RESEND_API_KEY` e `EMAIL_FROM`
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` e `TWILIO_VERIFY_SERVICE_SID`
+
+`SUPABASE_SERVICE_ROLE_KEY` e aceito apenas como nome legado. A configuracao preferida e `SUPABASE_SECRET_KEY`, nunca exposta como `NEXT_PUBLIC_`.
 
 Deploy de producao realizado via CLI:
 
@@ -93,15 +103,11 @@ Rotas validadas em producao:
 
 ## GitHub
 
-Planejado:
+Repositorio existente:
 
 ```text
 Owner: rafaelcamposbr
-Repo: projeto-jogo-futebol
-Visibilidade: private
+Repo: jogofutebol
+URL: https://github.com/rafaelcamposbr/jogofutebol
 Branch: main
 ```
-
-Status: nao criado. O conector GitHub autenticou `rafaelcamposbr`, mas nao tinha conta/repo instalado e nao expos ferramenta de criacao de repositorio. O ambiente local tambem nao tinha `gh`, `GITHUB_TOKEN` ou `GH_TOKEN`. A tentativa via navegador em `https://github.com/new` caiu em tela de login no in-app browser e no Chrome.
-
-Quando o repositorio for criado, conecte-o a Vercel para deploy automatico por push.

@@ -11,6 +11,7 @@
   const PROVISIONAL_STAFF_COURSE_COST = 1200;
   const APP_ENV = globalThis.__APP_ENV__ || "beta";
   const APP_VERSION = globalThis.__APP_VERSION__ || "0.1.0";
+  const VERIFICATION_STATUS = globalThis.__VERIFICATION_STATUS__ || { email: true, whatsapp: true };
   const PROVISIONAL_REPUTATION_IMPACTS = {
     grantDefaultInstitutional: -0.35,
     grantDefaultFinancial: -0.25,
@@ -901,6 +902,18 @@
     if (globalThis.window.location.hash !== hash) {
       globalThis.window.location.hash = hash;
     }
+  }
+
+  function requiredVerificationForRoute(route) {
+    if (!route) return "";
+    if (route.startsWith("/escritorio")) return "whatsapp";
+    if (route.startsWith("/imprensa") && !route.startsWith("/imprensa/clube/")) return "email";
+    return "";
+  }
+
+  function isVerificationLocked(route) {
+    const required = requiredVerificationForRoute(route);
+    return required ? !VERIFICATION_STATUS[required] : false;
   }
 
   function loadState() {
@@ -2100,9 +2113,15 @@
           </div>
           <nav class="nav" aria-label="Menu principal">
             ${NAV_ITEMS.map((item) => `
-              <button class="nav-button ${activeCategory === item.id ? "active" : ""}" data-view="${item.view}" data-route="${item.route}">
+              <button
+                class="nav-button ${activeCategory === item.id ? "active" : ""} ${isVerificationLocked(item.route) ? "locked" : ""}"
+                data-view="${item.view}"
+                data-route="${item.route}"
+                ${isVerificationLocked(item.route) ? `title="${item.id === "press" ? "Confirme o e-mail para liberar" : "Confirme o WhatsApp para liberar"}"` : ""}
+              >
                 <span class="nav-icon">${item.icon}</span>
                 <span>${item.label}</span>
+                ${isVerificationLocked(item.route) ? '<span class="nav-lock" aria-hidden="true">&#128274;</span>' : ""}
                 ${getMainNavCount(item.id) ? `<span class="nav-count">${getMainNavCount(item.id)}</span>` : ""}
               </button>
             `).join("")}
@@ -4860,6 +4879,13 @@
   function handleClick(event) {
     const nav = event.target.closest("[data-view]");
     if (nav) {
+      const targetRoute = nav.dataset.route || VIEW_ROUTES[nav.dataset.view];
+      const requiredVerification = requiredVerificationForRoute(targetRoute);
+      if (requiredVerification && !VERIFICATION_STATUS[requiredVerification]) {
+        const verificationRoute = requiredVerification === "email" ? "/verificar-email" : "/verificar-whatsapp";
+        globalThis.window.location.assign(`${verificationRoute}?next=${encodeURIComponent(targetRoute)}`);
+        return;
+      }
       currentView = nav.dataset.view;
       const installationByView = INSTALLATION_NAV_ITEMS.find((item) => item.view === currentView);
       if (installationByView) currentInstallationTab = installationByView.id;

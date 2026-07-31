@@ -5,14 +5,16 @@ import { buildGuestLegacyState, buildLegacyState } from "@/lib/game/legacy-state
 type LegacyGameProps = {
   initialState?: ReturnType<typeof buildLegacyState>;
   guest?: boolean;
+  verification?: { email: boolean; whatsapp: boolean };
 };
 
-export function LegacyGame({ initialState, guest = false }: LegacyGameProps) {
+export function LegacyGame({ initialState, guest = false, verification = { email: true, whatsapp: true } }: LegacyGameProps) {
   const state = initialState || buildGuestLegacyState();
   const bootstrap = `
     window.__APP_ENV__ = ${JSON.stringify(APP_ENV)};
     window.__APP_VERSION__ = ${JSON.stringify(APP_VERSION)};
     window.__GUEST_MODE__ = ${JSON.stringify(guest)};
+    window.__VERIFICATION_STATUS__ = ${JSON.stringify(verification)};
     (function(){
       try {
         var key = "football-club-manager-prototype-v1";

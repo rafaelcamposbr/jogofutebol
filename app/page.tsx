@@ -12,13 +12,19 @@ export default function HomePage() {
           imprensa, perfil publico e feedbacks.
         </p>
       </section>
-      <section className="auth-card">
-        <h2>Acessar beta</h2>
-        <p>Entre com uma conta de teste ou navegue como visitante com dados temporarios.</p>
-        <div className="link-row">
-          <Link href="/login">Entrar</Link>
-          <Link href="/cadastro">Criar conta</Link>
-          <Link href="/experimentar">Experimentar o jogo</Link>
+      <section className="home-entry" aria-label="Escolha como acessar">
+        <div className="home-choice-grid">
+          <Link className="home-choice" href="/login">
+            <span>LOGAR</span>
+            <small>Acessar uma conta existente</small>
+          </Link>
+          <Link className="home-choice" href="/cadastro">
+            <span>CADASTRAR</span>
+            <small>Criar uma nova conta</small>
+          </Link>
+        </div>
+        <div className="link-row home-secondary">
+          <Link href="/experimentar">Experimentar como visitante</Link>
           <Link href="/status">Status</Link>
         </div>
       </section>
