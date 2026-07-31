@@ -483,6 +483,12 @@
 }
 
 @media (max-width: 860px) {
+  .auth-page,
+  .status-page,
+  .plain-page {
+    padding-bottom: 96px;
+  }
+
   .auth-page {
     grid-template-columns: 1fr;
   }
