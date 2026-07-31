@@ -27,6 +27,11 @@ export default async function MyAccountPage() {
           emailVerified={profile.email_game_verified}
           whatsappVerified={profile.whatsapp_game_verified}
         />
+        <div className="account-help-link">
+          <h2>Ajuda e Tutorial</h2>
+          <p>Retome as etapas de implantacao e as orientacoes contextuais do clube.</p>
+          <a href="/escritorio/inteligencia?tab=tutorial">Abrir tutorial</a>
+        </div>
       </section>
     </main>
   );

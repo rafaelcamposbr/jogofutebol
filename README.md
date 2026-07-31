@@ -44,6 +44,8 @@ EMAIL_FROM=
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_VERIFY_SERVICE_SID=
+OPENAI_API_KEY=
+OPENAI_STAFF_MODEL=gpt-5.6
 NEXT_PUBLIC_APP_ENV=beta
 NEXT_PUBLIC_APP_VERSION=0.1.0
 ```
@@ -88,6 +90,10 @@ npm run typecheck
 - Subrotas do prototipo preservadas por catch-all
 - Perfil publico em `/imprensa/clube/[slug]`
 - Comunicados oficiais com sincronizacao para `/api/press-releases`
+- Funcionarios persistentes com personalidade, satisfacao, confianca, moral e talento natural oculto
+- Reunioes com interpretacao estruturada, memoria, promessas e efeitos deterministas
+- Cursos com custos, tolerancia, repeticao e saturacao por conteudo
+- Central de Orientacoes e tutorial progressivo com coordenador interino
 - Feedback fixo com gravacao em `/api/feedback`
 - Status publico em `/status`
 - Ambiente Beta e versao no cabecalho
@@ -112,4 +118,4 @@ No navegador, use o modo visitante novamente em `/experimentar`. Para banco, rea
 
 Beta publicada: `https://projeto-jogo-futebol-beta.vercel.app`.
 
-Veja `docs/authentication.md`, `docs/deployment.md` e `docs/infrastructure.md`.
+Veja `docs/authentication.md`, `docs/deployment.md`, `docs/infrastructure.md` e `docs/employee-intelligence.md`.

@@ -3847,6 +3847,14 @@
     const expiring = getContractsExpiringSoon();
     const inDevelopment = getStaffInDevelopment();
     return `
+      <section class="people-entry-band">
+        <div>
+          <span class="eyebrow">Gestao de pessoas</span>
+          <h2>Personalidade, reunioes e desenvolvimento</h2>
+          <p>Acompanhe satisfacao, confianca, cursos, promessas e orientacoes da equipe.</p>
+        </div>
+        <a class="button primary" href="/escritorio/inteligencia">Abrir Central de Pessoas</a>
+      </section>
       <section class="metric-grid">
         <div class="metric"><span>Funcionarios ativos</span><strong>${active.length}</strong><em>${new Set(active.map((employee) => employee.roleId)).size} cargo(s) ocupados.</em></div>
         <div class="metric"><span>Folha mensal</span><strong>${money(getStaffPayrollTotal())}</strong><em>Entra nas despesas recorrentes.</em></div>
