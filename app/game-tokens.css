@@ -1,0 +1,39 @@
+:root {
+  color-scheme: dark;
+  --game-bg-base: #05070c;
+  --game-bg-raised: #090c13;
+  --game-bg-layer: #0f1420;
+  --game-surface: #171d2a;
+  --game-surface-strong: #222a3a;
+  --game-surface-interactive: #303a4f;
+  --game-surface-soft: #111722;
+  --game-text: #f7f9fc;
+  --game-text-secondary: #dce3ed;
+  --game-text-muted: #9da9bb;
+  --game-accent: #2ed6c5;
+  --game-accent-soft: #64e7db;
+  --game-lime: #b8f43d;
+  --game-blue: #4f7df3;
+  --game-success: #40d17a;
+  --game-warning: #f3c756;
+  --game-danger: #ef5a6f;
+  --game-border: #263044;
+  --game-border-strong: #46536d;
+  --game-radius-sm: 8px;
+  --game-radius-md: 12px;
+  --game-radius-lg: 16px;
+  --game-shadow: 0 16px 36px rgba(0, 0, 0, 0.24);
+  --game-shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.16);
+  --game-sidebar-width: 248px;
+  --game-mobile-nav-height: 72px;
+  --game-content-width: 1500px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

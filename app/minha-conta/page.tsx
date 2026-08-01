@@ -3,7 +3,8 @@ import { BetaBadge } from "@/components/BetaBadge";
 import { getAuthenticatedProfile } from "@/lib/auth/profile";
 import { maskWhatsapp } from "@/lib/auth/validation";
 import { TutorialHelp } from "@/components/TutorialHelp";
-import { AccessBar } from "@/components/AccessBar";
+import { GameWorkspace } from "@/components/GameWorkspace";
+import { getGameAccess } from "@/lib/game/access";
 import { AppPageHeader } from "@/components/AppPageHeader";
 import { ClubBankruptcyManager } from "@/components/ClubBankruptcyManager";
 
@@ -11,9 +12,10 @@ export const dynamic = "force-dynamic";
 
 export default async function MyAccountPage() {
   const { profile } = await getAuthenticatedProfile();
+  const access = await getGameAccess({ nextPath: "/minha-conta" });
 
   return (
-    <><AccessBar mode="authenticated" userEmail={profile.email} verification={{ email: profile.email_game_verified, whatsapp: profile.whatsapp_game_verified }} /><main className="plain-page account-page">
+    <GameWorkspace access={access} title="Minha Conta"><main className="plain-page account-page">
       <section className="plain-card">
         <BetaBadge />
         <AppPageHeader title="Minha Conta" subtitle="Dados de acesso e gestao do clube." backHref="/escritorio" />
@@ -42,6 +44,6 @@ export default async function MyAccountPage() {
           <ClubBankruptcyManager />
         </details>
       </section>
-    </main></>
+    </main></GameWorkspace>
   );
 }

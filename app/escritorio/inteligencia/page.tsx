@@ -1,4 +1,4 @@
-import { AccessBar } from "@/components/AccessBar";
+import { GameWorkspace } from "@/components/GameWorkspace";
 import { StaffIntelligenceHub } from "@/components/StaffIntelligenceHub";
 import { getGameAccess } from "@/lib/game/access";
 
@@ -8,11 +8,10 @@ export default async function StaffIntelligencePage() {
   const access = await getGameAccess({ nextPath: "/escritorio/inteligencia" });
   const clubId = access.initialState.club.supabaseClubId;
   return (
-    <>
-      <AccessBar mode={access.mode} userEmail={access.userEmail} verification={access.verification} />
+    <GameWorkspace access={access} title="Central de Pessoas">
       <main className="people-page">
         <StaffIntelligenceHub clubId={clubId} />
       </main>
-    </>
+    </GameWorkspace>
   );
 }

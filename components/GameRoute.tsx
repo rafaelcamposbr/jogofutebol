@@ -1,5 +1,6 @@
-import { AccessBar } from "@/components/AccessBar";
 import { LegacyGame } from "@/components/LegacyGame";
+import { GameWorkspace } from "@/components/GameWorkspace";
+import { GameRouteHub } from "@/components/game-ui/GameRouteHub";
 import { getGameAccess } from "@/lib/game/access";
 
 export async function GameRoute({
@@ -13,13 +14,17 @@ export async function GameRoute({
   const betaVerification = { email: true, whatsapp: true };
 
   return (
-    <>
-      <AccessBar mode={access.mode} userEmail={access.userEmail} verification={access.verification} />
+    <GameWorkspace access={access}>
+      <GameRouteHub
+        balance={access.initialState.finance.cash}
+        reputation={access.initialState.reputations.institutional.value}
+        eventCount={access.initialState.events.length}
+      />
       <LegacyGame
         initialState={access.initialState}
         guest={access.mode !== "authenticated"}
         verification={betaVerification}
       />
-    </>
+    </GameWorkspace>
   );
 }

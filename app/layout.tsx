@@ -7,7 +7,7 @@ import { FeedbackButton } from "@/components/FeedbackButton";
 export const metadata: Metadata = {
   title: "Simulador de Gestao de Clube - Beta",
   description: "Beta online do simulador de gestao de clubes de futebol.",
-  metadataBase: new URL("https://simulador-gestao-clube-beta.vercel.app"),
+  metadataBase: new URL("https://projeto-jogo-futebol-beta.vercel.app"),
   openGraph: {
     title: "Simulador de Gestao de Clube - Beta",
     description: "Teste remoto da primeira beta navegavel do jogo.",

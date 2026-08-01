@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const response = NextResponse.redirect(new URL("/mercado", request.url));
+  const response = NextResponse.redirect(new URL("/escritorio", request.url));
   response.cookies.set("guest_mode", "1", {
     httpOnly: true,
     sameSite: "lax",

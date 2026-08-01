@@ -1,6 +1,9 @@
 (() => {
   "use strict";
 
+  function initLegacyGame() {
+  globalThis.__LEGACY_GAME_CLEANUP__?.();
+
   const STORAGE_KEY = "football-club-manager-prototype-v1";
   const MS_MINUTE = 60 * 1000;
   const MS_DAY = 24 * 60 * MS_MINUTE;
@@ -6263,14 +6266,26 @@
   document.addEventListener("click", handleClick);
   document.addEventListener("input", handleInput);
   document.addEventListener("change", updateEstimators);
-  window.addEventListener("beforeunload", () => {
+  function handleBeforeUnload() {
     if (state.club) saveState();
-  });
+  }
+  window.addEventListener("beforeunload", handleBeforeUnload);
 
   if (state.club) {
     const changes = processWorldProgress(true);
     saveState();
   }
   render();
-  setInterval(tick, 1000);
+  const tickInterval = setInterval(tick, 1000);
+  globalThis.__LEGACY_GAME_CLEANUP__ = () => {
+    document.removeEventListener("submit", handleSubmit);
+    document.removeEventListener("click", handleClick);
+    document.removeEventListener("input", handleInput);
+    document.removeEventListener("change", updateEstimators);
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    clearInterval(tickInterval);
+  };
+  }
+
+  globalThis.__LEGACY_GAME_INIT__ = initLegacyGame;
 })();

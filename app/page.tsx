@@ -13,20 +13,19 @@ export default async function HomePage() {
     <main className="auth-page">
       <section className="auth-hero">
         <BetaBadge />
-        <h1>Simulador Online de Gestao de Clube</h1>
+        <h1>Gestão de Futebol</h1>
         <p>
-          Primeira beta remota para testar criacao de clubes, navegacao do prototipo,
-          imprensa, perfil publico e progresso persistente.
+          Assuma a direção, estruture o clube e acompanhe um universo persistente.
         </p>
       </section>
       <section className="home-entry" aria-label="Escolha como acessar">
         <div className="home-choice-grid">
           <Link className="home-choice" href="/login">
-            <span>LOGAR</span>
+            <span>Entrar</span>
             <small>Acessar uma conta existente</small>
           </Link>
           <Link className="home-choice" href="/cadastro">
-            <span>CADASTRAR</span>
+            <span>Criar conta</span>
             <small>Criar uma nova conta</small>
           </Link>
         </div>

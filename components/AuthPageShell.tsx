@@ -6,10 +6,9 @@ export function AuthPageShell({ children }: { children: React.ReactNode }) {
     <main className="auth-page">
       <section className="auth-hero">
         <BetaBadge />
-        <h1>Gestao de clube do zero</h1>
+        <h1>Gestão de clube do zero</h1>
         <p>
-          Crie sua conta, funde um clube e continue de onde parou. Seu progresso principal fica associado
-          a sua conta no Supabase.
+          Crie sua conta, funde um clube e continue de onde parou em qualquer dispositivo.
         </p>
         <div className="auth-actions">
           <Link href="/status">Ver status</Link>

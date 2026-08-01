@@ -7,6 +7,7 @@
 node_modules
 dist
 out
+artifacts/
 *.log
 *.tsbuildinfo
 .codex-next-dev-*.out
