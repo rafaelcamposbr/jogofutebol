@@ -1954,6 +1954,14 @@ body:has(.game-app-shell) > #conteudo > .access-bar {
   .market-module-grid, .calendar-module-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+@media (min-width: 768px) and (max-width: 1099px) {
+  .game-shell-content .legacy-app-frame .tabs-row {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding-bottom: 8px;
+  }
+}
+
 @media (max-width: 767px) {
   .game-app-shell { padding-bottom: calc(var(--game-mobile-nav-height) + env(safe-area-inset-bottom)); }
   .game-sidebar { display: none; }
