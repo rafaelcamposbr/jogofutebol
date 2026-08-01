@@ -26,8 +26,13 @@ export async function ensureDefaultTactic(admin: AdminClient, ownerId: string, c
     id: deterministicUuid(`tactic-position:${tacticId}:${item.key}`), owner_id: ownerId, tactic_id: tacticId,
     slot_key: item.key, position: item.position, role: item.role, zone: item.zone, x: item.x, y: item.y,
   }));
-  const positionResult = await admin.from("tactic_positions").upsert(positions, { onConflict: "id", ignoreDuplicates: true });
-  if (positionResult.error) throw positionResult.error;
+  const { count: positionCount, error: positionCountError } = await admin.from("tactic_positions")
+    .select("id", { count: "exact", head: true }).eq("tactic_id", tacticId);
+  if (positionCountError) throw positionCountError;
+  if (!positionCount) {
+    const positionResult = await admin.from("tactic_positions").insert(positions);
+    if (positionResult.error) throw positionResult.error;
+  }
   const lineupResult = await admin.from("lineups").upsert({
     id: lineupId, owner_id: ownerId, club_id: clubId, tactic_id: tacticId, name: "Escalacao principal", status: "active", is_default: true,
   }, { onConflict: "id", ignoreDuplicates: true });
@@ -44,8 +49,13 @@ export async function ensureDefaultTactic(admin: AdminClient, ownerId: string, c
     player_id: item.playerId, slot_key: item.slotKey, position: item.position, role: item.role,
     is_starter: item.isStarter !== false, bench_order: "benchOrder" in item ? item.benchOrder || null : null, is_captain: index === 0,
   }));
-  const playerResult = await admin.from("lineup_players").upsert(assignmentRows, { onConflict: "id", ignoreDuplicates: true });
-  if (playerResult.error) throw playerResult.error;
+  const { count: assignmentCount, error: assignmentCountError } = await admin.from("lineup_players")
+    .select("id", { count: "exact", head: true }).eq("lineup_id", lineupId);
+  if (assignmentCountError) throw assignmentCountError;
+  if (!assignmentCount) {
+    const playerResult = await admin.from("lineup_players").insert(assignmentRows);
+    if (playerResult.error) throw playerResult.error;
+  }
   return { tacticId, lineupId };
 }
 
