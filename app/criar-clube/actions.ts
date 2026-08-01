@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { authenticatedHomeDestination } from "@/lib/auth/navigation";
 import { isMissingSessionError } from "@/lib/auth/navigation";
 import { logServerError } from "@/lib/server/log";
@@ -9,6 +8,7 @@ import { clampText, makeClubHashtag } from "@/lib/text";
 
 export type CreateClubState = {
   error?: string;
+  next?: string;
 };
 
 async function uniqueHashtag(base: string, supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>) {
@@ -64,7 +64,7 @@ export async function createClubAction(_previous: CreateClubState, formData: For
     hasClub: true,
     whatsappVerified: Boolean(profile?.whatsapp_game_verified),
   });
-  if (existingClub) redirect(destination);
+  if (existingClub) return { next: destination };
 
   let clubId: string | null = null;
   for (let attempt = 0; attempt < 3 && !clubId; attempt += 1) {
@@ -92,5 +92,5 @@ export async function createClubAction(_previous: CreateClubState, formData: For
 
   if (!clubId) return { error: "Nao foi possivel reservar a identificacao publica do clube." };
 
-  redirect(destination);
+  return { next: destination };
 }

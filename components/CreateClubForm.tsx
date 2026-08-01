@@ -1,12 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { createClubAction, type CreateClubState } from "@/app/criar-clube/actions";
 
 const initialState: CreateClubState = {};
 
 export function CreateClubForm() {
   const [state, formAction, pending] = useActionState(createClubAction, initialState);
+
+  useEffect(() => {
+    if (state.next) window.location.assign(state.next);
+  }, [state.next]);
 
   return (
     <form className="club-form" action={formAction}>
