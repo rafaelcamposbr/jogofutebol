@@ -1,9 +1,10 @@
 import "server-only";
 
 type SafeLogDetails = Record<string, boolean | number | string | null | undefined>;
+type LogArea = "auth" | "navigation" | "profile" | "tutorial" | "verification" | "players" | "matches";
 
 export function logServerEvent(
-  area: "auth" | "navigation" | "profile" | "tutorial" | "verification",
+  area: LogArea,
   event: string,
   details: SafeLogDetails = {},
 ) {
@@ -11,7 +12,7 @@ export function logServerEvent(
 }
 
 export function logServerError(
-  area: "auth" | "navigation" | "profile" | "tutorial" | "verification",
+  area: LogArea,
   event: string,
   error: unknown,
   details: SafeLogDetails = {},

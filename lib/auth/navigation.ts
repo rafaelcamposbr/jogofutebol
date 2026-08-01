@@ -1,11 +1,11 @@
 export type AuthenticatedHomeState = {
   hasClub: boolean;
-  whatsappVerified: boolean;
+  whatsappVerified?: boolean;
 };
 
 export function authenticatedHomeDestination(state: AuthenticatedHomeState) {
   if (!state.hasClub) return "/criar-clube";
-  return state.whatsappVerified ? "/escritorio" : "/mercado";
+  return "/escritorio";
 }
 
 export function isMissingSessionError(error: unknown) {

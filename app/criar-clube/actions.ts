@@ -51,19 +51,11 @@ export async function createClubAction(_previous: CreateClubState, formData: For
   }
 
   const { data: existingClub, error: existingClubError } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("whatsapp_game_verified")
-    .eq("id", user.id)
-    .maybeSingle<{ whatsapp_game_verified: boolean }>();
-  if (existingClubError || profileError) {
-    logServerError("navigation", "club_creation_context_failed", existingClubError || profileError);
+  if (existingClubError) {
+    logServerError("navigation", "club_creation_context_failed", existingClubError);
     return { error: "Nao foi possivel carregar seu cadastro agora. Tente novamente." };
   }
-  const destination = authenticatedHomeDestination({
-    hasClub: true,
-    whatsappVerified: Boolean(profile?.whatsapp_game_verified),
-  });
+  const destination = authenticatedHomeDestination({ hasClub: true });
   if (existingClub) return { next: destination };
 
   let clubId: string | null = null;

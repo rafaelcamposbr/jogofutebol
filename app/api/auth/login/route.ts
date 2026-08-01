@@ -17,14 +17,13 @@ export async function POST(request: Request) {
   if (!admin || !supabase) return apiError("Configuracao segura do servidor pendente.", 503);
 
   const classified = classifyLoginIdentifier(identifier);
-  let query = admin.from("profiles").select("email,whatsapp_game_verified");
+  let query = admin.from("profiles").select("email");
   if (classified.type === "email") query = query.eq("email", classified.normalized);
   if (classified.type === "username") query = query.eq("username_normalized", classified.normalized);
   if (classified.type === "whatsapp") query = query.eq("whatsapp_normalized", classified.normalized);
 
   const { data: profile, error: lookupError } = await query.limit(1).maybeSingle<{
     email: string;
-    whatsapp_game_verified: boolean;
   }>();
   if (lookupError) return apiError("Nao foi possivel entrar agora.", 503);
 
@@ -43,7 +42,6 @@ export async function POST(request: Request) {
   const response = apiSuccess({
     next: authenticatedHomeDestination({
       hasClub: Boolean(club),
-      whatsappVerified: Boolean(profile?.whatsapp_game_verified),
     }),
   });
   response.cookies.delete("guest_mode");

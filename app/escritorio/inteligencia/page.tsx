@@ -5,7 +5,7 @@ import { getGameAccess } from "@/lib/game/access";
 export const dynamic = "force-dynamic";
 
 export default async function StaffIntelligencePage() {
-  const access = await getGameAccess({ requireVerification: "whatsapp", nextPath: "/escritorio/inteligencia" });
+  const access = await getGameAccess({ nextPath: "/escritorio/inteligencia" });
   const clubId = access.initialState.club.supabaseClubId;
   return (
     <>

@@ -1,5 +1,14 @@
-import { GameRoute } from "@/components/GameRoute";
+import { GameWorkspaceHeader } from "@/components/GameWorkspaceHeader";
+import { SquadDashboard } from "@/components/SquadDashboard";
+import { getGameAccess } from "@/lib/game/access";
+import { buildSquadOverview, getPlayerGameContext } from "@/lib/game/players/server";
 
-export default function SquadPage() {
-  return <GameRoute />;
+export const dynamic = "force-dynamic";
+
+export default async function SquadPage() {
+  const access = await getGameAccess({ nextPath: "/elenco" });
+  const context = await getPlayerGameContext();
+  if (!context.ok || !context.club) throw new Error("player_context_unavailable");
+  const overview = await buildSquadOverview(context.admin, context.club.id);
+  return <div className="sports-app"><GameWorkspaceHeader clubName={context.club.name} userEmail={access.userEmail} /><main className="sports-page"><header className="section-heading"><div><p>Departamento de futebol</p><h1>Elenco</h1></div><a className="primary-link" href="/elenco/tatica">Montar escalacao</a></header><SquadDashboard players={overview.players as never} /></main></div>;
 }

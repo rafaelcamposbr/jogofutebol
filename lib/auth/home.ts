@@ -23,9 +23,9 @@ export async function getOptionalAuthenticatedHome(from: string) {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("whatsapp_game_verified")
+    .select("id")
     .eq("id", userData.user.id)
-    .maybeSingle<{ whatsapp_game_verified: boolean }>();
+    .maybeSingle<{ id: string }>();
   if (profileError) {
     logServerError("profile", "profile_lookup_failed", profileError, { from });
     redirect(`/error?reason=profile-unavailable&next=${encodeURIComponent(from)}`);
@@ -48,7 +48,6 @@ export async function getOptionalAuthenticatedHome(from: string) {
 
   return authenticatedHomeDestination({
     hasClub: Boolean(club),
-    whatsappVerified: profile.whatsapp_game_verified,
   });
 }
 

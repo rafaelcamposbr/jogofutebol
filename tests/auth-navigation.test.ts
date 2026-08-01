@@ -7,8 +7,8 @@ test("home autenticada prioriza criacao de clube", () => {
   assert.equal(authenticatedHomeDestination({ hasClub: false, whatsappVerified: true }), "/criar-clube");
 });
 
-test("home autenticada separa mercado e escritorio por WhatsApp", () => {
-  assert.equal(authenticatedHomeDestination({ hasClub: true, whatsappVerified: false }), "/mercado");
+test("home autenticada abre o escritorio durante a beta", () => {
+  assert.equal(authenticatedHomeDestination({ hasClub: true, whatsappVerified: false }), "/escritorio");
   assert.equal(authenticatedHomeDestination({ hasClub: true, whatsappVerified: true }), "/escritorio");
 });
 

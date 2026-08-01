@@ -905,9 +905,6 @@
   }
 
   function requiredVerificationForRoute(route) {
-    if (!route) return "";
-    if (route.startsWith("/escritorio")) return "whatsapp";
-    if (route.startsWith("/imprensa") && !route.startsWith("/imprensa/clube/")) return "email";
     return "";
   }
 

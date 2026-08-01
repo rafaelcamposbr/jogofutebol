@@ -20,7 +20,6 @@ const unrestrictedVerification = { email: true, whatsapp: true };
 export async function getGameAccess(options: {
   allowPublic?: boolean;
   requireClub?: boolean;
-  requireVerification?: "email" | "whatsapp";
   nextPath?: string;
 } = {}): Promise<GameAccess> {
   const cookieStore = await cookies();
@@ -67,17 +66,6 @@ export async function getGameAccess(options: {
     email: profile.email_game_verified,
     whatsapp: profile.whatsapp_game_verified,
   };
-  if (options.requireVerification && !verification[options.requireVerification]) {
-    const verificationPath = options.requireVerification === "email" ? "/verificar-email" : "/verificar-whatsapp";
-    const nextPath = options.nextPath || (options.requireVerification === "email" ? "/imprensa" : "/escritorio");
-    logServerEvent("navigation", "verification_required", {
-      channel: options.requireVerification,
-      from: nextPath,
-      to: verificationPath,
-    });
-    redirect(`${verificationPath}?next=${encodeURIComponent(nextPath)}`);
-  }
-
   const { data: club, error: clubError } = await supabase
     .from("clubs")
     .select("*")

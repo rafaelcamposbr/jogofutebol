@@ -4,7 +4,6 @@ import { BetaBadge } from "@/components/BetaBadge";
 export function AccessBar({
   mode,
   userEmail,
-  verification,
 }: {
   mode: "authenticated" | "guest" | "public";
   userEmail?: string;
@@ -16,8 +15,6 @@ export function AccessBar({
       <div className="access-actions">
         {mode === "guest" ? <span className="access-note">Modo visitante: dados temporarios.</span> : null}
         {mode === "authenticated" && userEmail ? <span className="access-note">{userEmail}</span> : null}
-        {mode === "authenticated" && !verification.email ? <Link href="/verificar-email">E-mail pendente</Link> : null}
-        {mode === "authenticated" && !verification.whatsapp ? <Link href="/verificar-whatsapp">WhatsApp pendente</Link> : null}
         {mode === "authenticated" ? <Link href="/minha-conta">Minha Conta</Link> : null}
         {mode === "authenticated" ? <Link href="/minha-conta#ajuda">Ajuda</Link> : null}
         <Link href="/status">Status</Link>

@@ -4,14 +4,13 @@ import { getGameAccess } from "@/lib/game/access";
 
 export async function GameRoute({
   allowPublic = false,
-  requireVerification,
   nextPath,
 }: {
   allowPublic?: boolean;
-  requireVerification?: "email" | "whatsapp";
   nextPath?: string;
 }) {
-  const access = await getGameAccess({ allowPublic, requireVerification, nextPath });
+  const access = await getGameAccess({ allowPublic, nextPath });
+  const betaVerification = { email: true, whatsapp: true };
 
   return (
     <>
@@ -19,7 +18,7 @@ export async function GameRoute({
       <LegacyGame
         initialState={access.initialState}
         guest={access.mode !== "authenticated"}
-        verification={access.verification}
+        verification={betaVerification}
       />
     </>
   );

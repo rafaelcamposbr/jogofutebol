@@ -26,7 +26,7 @@ export default async function CreateClubPage() {
     );
   }
 
-  const { user, profile } = await getAuthenticatedProfile("/criar-clube");
+  const { user } = await getAuthenticatedProfile("/criar-clube");
 
   const { data: existingClub, error: clubError } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
   if (clubError) {
@@ -34,10 +34,7 @@ export default async function CreateClubPage() {
     redirect("/error?reason=club-unavailable&next=/criar-clube");
   }
   if (existingClub) {
-    redirect(authenticatedHomeDestination({
-      hasClub: true,
-      whatsappVerified: profile.whatsapp_game_verified,
-    }));
+    redirect(authenticatedHomeDestination({ hasClub: true }));
   }
 
   return (
