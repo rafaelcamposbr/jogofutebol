@@ -89,7 +89,7 @@ npm run typecheck
 - Criacao de clube real no Supabase
 - Registro de evento de fundacao
 - Modo visitante em `/experimentar`
-- Rotas principais: `/central`, `/imprensa`, `/elenco`, `/mercado`, `/escritorio`, `/calendario`
+- Rotas principais: `/imprensa`, `/elenco`, `/mercado`, `/escritorio`, `/calendario`; `/central` e mantida apenas como redirecionamento de compatibilidade
 - Subrotas do prototipo preservadas por catch-all
 - Perfil publico em `/imprensa/clube/[slug]`
 - Comunicados oficiais com sincronizacao para `/api/press-releases`

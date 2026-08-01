@@ -203,7 +203,7 @@ export function maskWhatsapp(whatsapp: string | null | undefined) {
   return `+55 (${digits.slice(2, 4)}) *****-${digits.slice(-4)}`;
 }
 
-export function safeNextPath(value: string | null | undefined, fallback = "/central") {
+export function safeNextPath(value: string | null | undefined, fallback = "/") {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
   return value;
 }

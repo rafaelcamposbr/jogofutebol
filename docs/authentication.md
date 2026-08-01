@@ -44,4 +44,4 @@ Para habilitar o envio real, o Twilio exige um Verify Service e um WhatsApp Send
 - `email_game_verified = false`: redireciona rotas privadas de `/imprensa` para `/verificar-email`.
 - `whatsapp_game_verified = false`: redireciona `/escritorio` e subrotas para `/verificar-whatsapp`.
 - Perfis publicos em `/imprensa/clube/[slug]` continuam acessiveis.
-- Central, Elenco, Mercado e Calendario continuam disponiveis sem as confirmacoes.
+- Elenco, Mercado e Calendario continuam disponiveis sem as confirmacoes; `/central` redireciona para Mercado ou Escritorio conforme o status do WhatsApp.

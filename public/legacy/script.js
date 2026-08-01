@@ -27,11 +27,10 @@
   ];
 
   const NAV_ITEMS = [
-    { id: "central", view: "overview", label: "Central", icon: "CE", route: "/central" },
     { id: "press", view: "pressFeed", label: "Imprensa", icon: "IM", route: "/imprensa" },
     { id: "squad", view: "squad", label: "Elenco", icon: "EL", route: "/elenco" },
     { id: "market", view: "marketPlayers", label: "Mercado", icon: "ME", route: "/mercado" },
-    { id: "office", view: "finances", label: "Escrit&oacute;rio", icon: "ES", route: "/escritorio" },
+    { id: "office", view: "overview", label: "Escrit&oacute;rio", icon: "ES", route: "/escritorio" },
     { id: "calendar", view: "calendarAgenda", label: "Calend&aacute;rio", icon: "CA", route: "/calendario" },
   ];
 
@@ -341,6 +340,7 @@
   const POSITIONS = ["GOL", "LD", "ZAG", "LE", "VOL", "MC", "MEI", "PD", "PE", "ATA"];
 
   const OFFICE_NAV_ITEMS = [
+    { id: "overview", label: "Vis&atilde;o Geral", view: "overview", route: "/escritorio" },
     { id: "finances", label: "Finan&ccedil;as", view: "finances", route: "/escritorio/financas" },
     { id: "property", label: "Patrim&ocirc;nio", view: "property", route: "/escritorio/patrimonio" },
     { id: "sponsorship", label: "Patroc&iacute;nios", view: "sponsorship", route: "/escritorio/patrocinios" },
@@ -445,7 +445,7 @@
   ];
 
   const VIEW_ROUTES = {
-    overview: "/central",
+    overview: "/escritorio",
     pressFeed: "/imprensa/arquibancada",
     pressClub: "/imprensa/meu-clube",
     pressMarket: "/imprensa/mercado-da-bola",
@@ -1668,23 +1668,22 @@
   }
 
   function getMainCategoryForView(view) {
-    if (["overview"].includes(view)) return "central";
+    if (["overview"].includes(view)) return "office";
     if (PRESS_NAV_ITEMS.some((item) => item.view === view)) return "press";
     if (SQUAD_NAV_ITEMS.some((item) => item.view === view)) return "squad";
     if (MARKET_NAV_ITEMS.some((item) => item.view === view)) return "market";
     if (OFFICE_NAV_ITEMS.some((item) => item.view === view) || INSTALLATION_NAV_ITEMS.some((item) => item.view === view)) return "office";
     if (CALENDAR_NAV_ITEMS.some((item) => item.view === view) || view === "events") return "calendar";
-    return "central";
+    return "office";
   }
 
   function getMainNavCount(categoryId) {
     if (!state.club) return 0;
-    if (categoryId === "central") return getImportantAlerts().length;
     if (categoryId === "press") return state.events.slice(0, 8).length;
     if (categoryId === "squad") return state.players.squad.length + state.players.youth.length;
     if (categoryId === "market") return state.players.tryoutFindings.length
       + state.staff.proposals.filter((proposal) => ["waiting", "counteroffer"].includes(proposal.status)).length;
-    if (categoryId === "office") return getUnseatedStaffCount() + (state.municipalGrant.debt > 0 ? 1 : 0);
+    if (categoryId === "office") return getImportantAlerts().length + getUnseatedStaffCount() + (state.municipalGrant.debt > 0 ? 1 : 0);
     if (categoryId === "calendar") return getUpcomingEventItems().length;
     return 0;
   }
@@ -1964,7 +1963,7 @@
       description: `${state.club.fullName} foi fundado em ${state.club.city}.`,
     });
     currentView = "overview";
-    setPrototypeRoute("/central");
+    setPrototypeRoute("/escritorio");
     saveState();
     render();
     toast("Clube criado. O relogio do prototipo ja esta rodando.");
@@ -2150,7 +2149,7 @@
 
   function renderCurrentView() {
     const views = {
-      overview: renderOverview,
+      overview: () => renderOfficeSection(renderOverview()),
       pressFeed: () => renderPress("stands"),
       pressClub: () => renderPress("club"),
       pressMarket: () => renderPress("ball-market"),
@@ -2735,7 +2734,7 @@
     const currentClub = getCurrentPublicClub();
     return state.events.slice(0, 60).map((event, index) => ({
       ...eventToPressPost(event, currentClub, index, true),
-      source: "Central interna do clube",
+      source: "Escritorio do clube",
       relevanceLevel: "privado",
       clubs: [currentClub],
       targetView: pressTargetViewForEvent(event),
@@ -3300,6 +3299,14 @@
     const offline = state.offlineReport && !state.offlineReport.seen ? renderOfflineReport() : "";
     return `
       ${offline}
+      <section class="people-entry-band">
+        <div>
+          <span class="eyebrow">Gestao de pessoas</span>
+          <h2>Equipe, reunioes e desenvolvimento</h2>
+          <p>Acompanhe satisfacao, cursos, promessas, orientacoes e pendencias administrativas.</p>
+        </div>
+        <a class="button primary" href="/escritorio/inteligencia">Abrir Central de Pessoas</a>
+      </section>
       <section class="metric-grid">
         <div class="metric"><span>Caixa dispon&iacute;vel</span><strong class="${state.finance.cash < 0 ? "money-minus" : ""}">${money(state.finance.cash)}</strong><em>Saldo persistente salvo no localStorage.</em></div>
         <div class="metric"><span>Receita do m&ecirc;s</span><strong class="money-plus">${money(getRecentRevenue())}</strong><em>Entradas registradas nos ultimos 30 dias.</em></div>
@@ -4887,6 +4894,7 @@
   function handleClick(event) {
     const nav = event.target.closest("[data-view]");
     if (nav) {
+      event.preventDefault();
       const targetRoute = nav.dataset.route || VIEW_ROUTES[nav.dataset.view];
       const requiredVerification = requiredVerificationForRoute(targetRoute);
       if (requiredVerification && !VERIFICATION_STATUS[requiredVerification]) {

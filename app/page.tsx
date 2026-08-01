@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { BetaBadge } from "@/components/BetaBadge";
+import { getOptionalAuthenticatedHome } from "@/lib/auth/home";
+import { redirect } from "next/navigation";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const destination = await getOptionalAuthenticatedHome("/");
+  if (destination) redirect(destination);
+
   return (
     <main className="auth-page">
       <section className="auth-hero">

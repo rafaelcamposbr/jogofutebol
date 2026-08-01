@@ -1,5 +1,6 @@
 import { GameRoute } from "@/components/GameRoute";
 
-export default function PressSubroutePage() {
-  return <GameRoute requireVerification="email" nextPath="/imprensa" />;
+export default async function PressSubroutePage({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  return <GameRoute requireVerification="email" nextPath={`/imprensa/${slug.join("/")}`} />;
 }

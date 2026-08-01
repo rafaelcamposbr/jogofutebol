@@ -48,7 +48,7 @@ export function LegacyGame({ initialState, guest = false, verification = { email
       <div id="toast-region" className="toast-region" aria-live="polite" />
       <Script src="/legacy/script.js" strategy="afterInteractive" />
       <StaffSyncBridge enabled={!guest} clubId={state.club?.supabaseClubId} />
-      <TutorialCoach enabled={!guest} />
+      <TutorialCoach enabled={!guest} verification={verification} />
     </>
   );
 }

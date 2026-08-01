@@ -1,6 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { authenticatedHomeDestination } from "@/lib/auth/navigation";
+import { isMissingSessionError } from "@/lib/auth/navigation";
+import { logServerError } from "@/lib/server/log";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { clampText, makeClubHashtag } from "@/lib/text";
 
@@ -24,7 +27,13 @@ export async function createClubAction(_previous: CreateClubState, formData: For
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
   const user = userData.user;
-  if (userError || !user) return { error: "Sessao expirada. Entre novamente para criar o clube." };
+  if (!user) {
+    if (userError && !isMissingSessionError(userError)) {
+      logServerError("auth", "club_creation_session_lookup_failed", userError);
+      return { error: "Nao foi possivel validar sua sessao agora. Tente novamente." };
+    }
+    return { error: "Sessao expirada. Entre novamente para criar o clube." };
+  }
 
   const name = clampText(formData.get("name"), 120);
   const shortName = clampText(formData.get("shortName"), 60);
@@ -41,8 +50,21 @@ export async function createClubAction(_previous: CreateClubState, formData: For
     return { error: "Preencha nome, nome curto, sigla, cidade e UF." };
   }
 
-  const { data: existingClub } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
-  if (existingClub) redirect("/central");
+  const { data: existingClub, error: existingClubError } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("whatsapp_game_verified")
+    .eq("id", user.id)
+    .maybeSingle<{ whatsapp_game_verified: boolean }>();
+  if (existingClubError || profileError) {
+    logServerError("navigation", "club_creation_context_failed", existingClubError || profileError);
+    return { error: "Nao foi possivel carregar seu cadastro agora. Tente novamente." };
+  }
+  const destination = authenticatedHomeDestination({
+    hasClub: true,
+    whatsappVerified: Boolean(profile?.whatsapp_game_verified),
+  });
+  if (existingClub) redirect(destination);
 
   let clubId: string | null = null;
   for (let attempt = 0; attempt < 3 && !clubId; attempt += 1) {
@@ -70,5 +92,5 @@ export async function createClubAction(_previous: CreateClubState, formData: For
 
   if (!clubId) return { error: "Nao foi possivel reservar a identificacao publica do clube." };
 
-  redirect("/central");
+  redirect(destination);
 }

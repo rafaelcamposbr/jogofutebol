@@ -18,6 +18,8 @@ export function VerificationPanel({ channel, destination, nextPath, token, verif
   const [success, setSuccess] = useState(verified);
   const [pending, setPending] = useState(false);
   const [code, setCode] = useState("");
+  const [requested, setRequested] = useState(false);
+  const [requestOk, setRequestOk] = useState(false);
   const isEmail = channel === "email";
 
   async function callEndpoint(path: string, body?: Record<string, string>) {
@@ -26,13 +28,17 @@ export function VerificationPanel({ channel, destination, nextPath, token, verif
     try {
       const response = await fetch(path, {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: body ? JSON.stringify(body) : undefined,
       });
       const result = (await response.json().catch(() => ({}))) as ApiResult;
       setMessage(result.message || (response.ok ? "Solicitacao concluida." : "Nao foi possivel concluir."));
+      setRequestOk(response.ok);
+      if (response.ok && path.endsWith("/request")) setRequested(true);
       if (response.ok && (path.endsWith("/confirm") || result.alreadyVerified)) setSuccess(true);
     } catch {
+      setRequestOk(false);
       setMessage("Nao foi possivel concluir. Tente novamente.");
     } finally {
       setPending(false);
@@ -70,7 +76,7 @@ export function VerificationPanel({ channel, destination, nextPath, token, verif
           disabled={pending}
           onClick={() => callEndpoint("/api/verifications/email/request")}
         >
-          {pending ? "Enviando..." : "Enviar confirmacao"}
+          {pending ? "Enviando..." : requested ? "Reenviar confirmacao" : "Enviar confirmacao"}
         </button>
       ) : null}
 
@@ -82,7 +88,7 @@ export function VerificationPanel({ channel, destination, nextPath, token, verif
             disabled={pending}
             onClick={() => callEndpoint("/api/verifications/whatsapp/request")}
           >
-            {pending ? "Enviando..." : "Enviar codigo"}
+            {pending ? "Enviando..." : requested ? "Reenviar codigo" : "Enviar codigo"}
           </button>
           <form className="verification-code-form" onSubmit={confirmWhatsapp}>
             <label>
@@ -102,11 +108,12 @@ export function VerificationPanel({ channel, destination, nextPath, token, verif
         </>
       ) : null}
 
-      {message ? <p className={`feedback-message ${success ? "sent" : "error"}`} role="status">{message}</p> : null}
+      {message ? <p className={`feedback-message ${success || requestOk ? "sent" : "error"}`} role="status">{message}</p> : null}
       <div className="link-row">
         {success ? <Link href={nextPath}>Continuar</Link> : null}
-        <Link href="/minha-conta">Alterar {isEmail ? "e-mail" : "WhatsApp"}</Link>
-        <Link href="/central">Voltar a Central</Link>
+        <Link href={`/minha-conta#${isEmail ? "email" : "whatsapp"}`}>Alterar {isEmail ? "e-mail" : "WhatsApp"}</Link>
+        <Link href="/mercado">Voltar ao Mercado</Link>
+        <Link href="/minha-conta">Minha Conta</Link>
       </div>
     </section>
   );

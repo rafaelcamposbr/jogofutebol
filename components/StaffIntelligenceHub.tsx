@@ -41,9 +41,9 @@ type Overview = {
 };
 
 type TutorialData = {
-  progress: { current_step: number; completed_steps: number[]; contextual_tips_seen: string[]; status: string } | null;
+  progress: { current_step: number; completed_steps: number[]; skipped_steps: number[]; contextual_tips_seen: string[]; status: string } | null;
   advisor: { name: string; role: string; subtitle: string; initials: string };
-  steps: Array<{ id: number; title: string; target: string }>;
+  steps: Array<{ id: number; title: string; target: string; route: string; actionLabel: string }>;
 };
 
 type Tab = "team" | "meetings" | "courses" | "advisors" | "tutorial";
@@ -67,8 +67,8 @@ export function StaffIntelligenceHub({ clubId }: { clubId: string }) {
 
   const load = useCallback(async () => {
     const [overviewResponse, tutorialResponse] = await Promise.all([
-      fetch("/api/staff/overview", { cache: "no-store" }),
-      fetch("/api/tutorial", { cache: "no-store" }),
+      fetch("/api/staff/overview", { cache: "no-store", credentials: "same-origin" }),
+      fetch("/api/tutorial", { cache: "no-store", credentials: "same-origin" }),
     ]);
     if (overviewResponse.ok) {
       const next = await overviewResponse.json() as Overview;
@@ -91,6 +91,7 @@ export function StaffIntelligenceHub({ clubId }: { clubId: string }) {
         if (state?.club?.supabaseClubId === clubId && Array.isArray(state?.staff?.employees)) {
           await fetch("/api/staff/sync", {
             method: "POST",
+            credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ employees: state.staff.employees }),
           });
@@ -158,12 +159,18 @@ export function StaffIntelligenceHub({ clubId }: { clubId: string }) {
   }
 
   async function patch(path: string, payload: Record<string, unknown>) {
+    if (busy) return;
     setBusy(true); setMessage("");
-    const response = await fetch(path, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    const result = await response.json();
-    setMessage(result.message || (response.ok ? "Alteracao registrada." : "Nao foi possivel concluir a acao."));
-    if (response.ok) await load();
-    setBusy(false);
+    try {
+      const response = await fetch(path, { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const result = await response.json().catch(() => null);
+      setMessage(result?.message || result?.error || (response.ok ? "Alteracao registrada." : "Nao foi possivel concluir a acao."));
+      if (response.ok) await load();
+    } catch {
+      setMessage("Nao foi possivel concluir a acao. Verifique sua conexao e tente novamente.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function chooseTab(next: Tab) {
@@ -310,10 +317,12 @@ function AdvisorView({ messages, employees, filter, onFilter, busy, onUpdate }: 
 }
 
 function TutorialView({ data, busy, onAction }: { data: TutorialData | null; busy: boolean; onAction: (action: string) => void }) {
+  const [confirmEnd, setConfirmEnd] = useState(false);
   if (!data?.progress) return <EmptyState text="Crie um clube para iniciar o tutorial." />;
   const progress = data.progress;
   const current = data.steps.find((step) => step.id === progress.current_step);
-  return <section className="tutorial-center"><header><span className="tutorial-avatar">{data.advisor.initials}</span><div><h2>{data.advisor.name}</h2><p>{data.advisor.role} · {data.advisor.subtitle}</p></div></header><div className="tutorial-progress"><span style={{ width: `${progress.completed_steps.length * 10}%` }} /></div><strong>Status: {statusLabel(progress.status)}</strong><p>Etapa atual: {current?.title || "Tutorial concluido"}</p><ol>{data.steps.map((step) => <li className={progress.completed_steps.includes(step.id) ? "done" : step.id === progress.current_step ? "current" : ""} key={step.id}>{step.id}. {step.title}</li>)}</ol><div className="tutorial-center-actions">{progress.status !== "active" ? <button className="people-primary" disabled={busy} onClick={() => onAction("reopen")}>Reabrir tutorial</button> : <><button disabled={busy} onClick={() => onAction("back")}>Voltar</button><button disabled={busy} onClick={() => onAction("pause")}>Pausar</button><button disabled={busy} onClick={() => onAction("next")}>Continuar</button></>}</div></section>;
+  const statusClass = (stepId: number) => progress.completed_steps.includes(stepId) ? "done" : progress.skipped_steps?.includes(stepId) ? "skipped" : stepId === progress.current_step ? "current" : "";
+  return <section className="tutorial-center"><header><span className="tutorial-avatar">{data.advisor.initials}</span><div><h2>{data.advisor.name}</h2><p>{data.advisor.role} · {data.advisor.subtitle}</p></div></header><div className="tutorial-progress"><span style={{ width: `${Math.min(100, (progress.completed_steps.length + (progress.skipped_steps?.length || 0)) * 10)}%` }} /></div><strong>Status: {statusLabel(progress.status)}</strong><p>Etapa atual: {current?.title || "Tutorial concluido"}</p><ol>{data.steps.map((step) => <li className={statusClass(step.id)} key={step.id}>{step.id}. {step.title}</li>)}</ol>{current ? <a className="people-primary tutorial-center-link" href={current.route}>{current.actionLabel}</a> : null}<div className="tutorial-center-actions">{progress.status !== "active" ? <button className="people-primary" disabled={busy} onClick={() => onAction("reopen")}>Retomar tutorial</button> : <><button disabled={busy || progress.current_step === 1} onClick={() => onAction("back")}>Voltar</button><button disabled={busy} onClick={() => onAction("skip-step")}>Pular etapa</button><button disabled={busy} onClick={() => onAction("pause")}>Pausar</button><button disabled={busy} onClick={() => onAction("next")}>{progress.current_step === data.steps.length ? "Concluir" : "Continuar"}</button><button className="danger" disabled={busy} onClick={() => setConfirmEnd(true)}>Encerrar</button></>}</div>{confirmEnd ? <div className="tutorial-confirm" role="alertdialog" aria-label="Confirmar encerramento"><strong>Encerrar o tutorial?</strong><p>Voce podera reabri-lo depois em Minha Conta.</p><div><button disabled={busy} onClick={() => setConfirmEnd(false)}>Cancelar</button><button className="danger" disabled={busy} onClick={() => { setConfirmEnd(false); onAction("end"); }}>Confirmar encerramento</button></div></div> : null}</section>;
 }
 
 function ContextTip({ tip, tutorial, onDismiss, children }: { tip: string; tutorial: TutorialData | null; onDismiss: (tip: string) => void; children: React.ReactNode }) {

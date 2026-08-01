@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { BetaBadge } from "@/components/BetaBadge";
 import { CreateClubForm } from "@/components/CreateClubForm";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { authenticatedHomeDestination } from "@/lib/auth/navigation";
+import { getAuthenticatedProfile } from "@/lib/auth/profile";
+import { logServerError } from "@/lib/server/log";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +26,19 @@ export default async function CreateClubPage() {
     );
   }
 
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) redirect("/login?next=/criar-clube");
+  const { user, profile } = await getAuthenticatedProfile("/criar-clube");
 
-  const { data: existingClub } = await supabase.from("clubs").select("id").eq("owner_id", userData.user.id).maybeSingle();
-  if (existingClub) redirect("/central");
+  const { data: existingClub, error: clubError } = await supabase.from("clubs").select("id").eq("owner_id", user.id).maybeSingle();
+  if (clubError) {
+    logServerError("navigation", "club_creation_page_lookup_failed", clubError);
+    redirect("/error?reason=club-unavailable&next=/criar-clube");
+  }
+  if (existingClub) {
+    redirect(authenticatedHomeDestination({
+      hasClub: true,
+      whatsappVerified: profile.whatsapp_game_verified,
+    }));
+  }
 
   return (
     <main className="plain-page">

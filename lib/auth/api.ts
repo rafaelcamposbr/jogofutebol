@@ -1,6 +1,8 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
+import { isMissingSessionError } from "@/lib/auth/navigation";
+import { logServerError, logServerEvent } from "@/lib/server/log";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { GameProfile } from "@/lib/auth/profile";
@@ -23,20 +25,34 @@ export async function getApiAuthContext() {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { error: apiError("Servico de autenticacao indisponivel.", 503) } as const;
 
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { error: apiError("Sessao expirada. Entre novamente.", 401) } as const;
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (!userData.user) {
+    if (userError && !isMissingSessionError(userError)) {
+      logServerError("auth", "api_session_lookup_failed", userError);
+      return { error: apiError("Nao foi possivel validar a sessao agora. Tente novamente.", 503) } as const;
+    }
+    logServerEvent("auth", "api_session_missing");
+    return { error: apiError("Sessao expirada. Entre novamente.", 401) } as const;
+  }
 
-  const { data: profile } = await supabase
+  const admin = createSupabaseAdminClient();
+  if (!admin) return { error: apiError("Configuracao segura do servidor pendente.", 503) } as const;
+
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select(
       "id,username,username_normalized,first_name,last_name,email,whatsapp,whatsapp_normalized,email_game_verified,whatsapp_game_verified,email_verified_at,whatsapp_verified_at,created_at",
     )
     .eq("id", userData.user.id)
-    .single<GameProfile>();
-  if (!profile) return { error: apiError("Perfil da conta nao encontrado.", 409) } as const;
-
-  const admin = createSupabaseAdminClient();
-  if (!admin) return { error: apiError("Configuracao segura do servidor pendente.", 503) } as const;
+    .maybeSingle<GameProfile>();
+  if (profileError) {
+    logServerError("profile", "api_profile_lookup_failed", profileError);
+    return { error: apiError("Perfil temporariamente indisponivel. Tente novamente.", 503) } as const;
+  }
+  if (!profile) {
+    logServerEvent("profile", "api_profile_missing");
+    return { error: apiError("Perfil da conta nao encontrado.", 409) } as const;
+  }
 
   return { supabase, admin, user: userData.user, profile } as const;
 }

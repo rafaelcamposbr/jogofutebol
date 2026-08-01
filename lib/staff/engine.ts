@@ -97,16 +97,16 @@ export const COURSE_CATALOG: Record<CourseType, { gain: number; cost: number; du
 };
 
 export const TUTORIAL_STEPS = [
-  { id: 1, title: "Boas-vindas", target: "body" },
-  { id: 2, title: "Central", target: '[data-view="overview"]' },
-  { id: 3, title: "Departamento de futebol", target: '[data-view="staff"]' },
-  { id: 4, title: "Busca e contratacao", target: '[data-staff-tab="search"]' },
-  { id: 5, title: "Escritorio", target: '[data-view="administration"]' },
-  { id: 6, title: "Sala de Reuniao", target: '[data-people-hub="meetings"]' },
-  { id: 7, title: "Cursos", target: '[data-people-hub="courses"]' },
-  { id: 8, title: "Instalacoes", target: '[data-view="installations"]' },
-  { id: 9, title: "Areas principais", target: ".sidebar" },
-  { id: 10, title: "Primeiras decisoes", target: "main" },
+  { id: 1, title: "Boas-vindas", target: "body", route: "/mercado", actionLabel: "Explorar o jogo" },
+  { id: 2, title: "Visao geral do Escritorio", target: '[data-view="overview"]', route: "/escritorio", actionLabel: "Abrir Escritorio" },
+  { id: 3, title: "Departamento de futebol", target: '[data-view="staff"]', route: "/escritorio/funcionarios", actionLabel: "Ver funcionarios" },
+  { id: 4, title: "Busca e contratacao", target: '[data-staff-tab="search"]', route: "/escritorio/funcionarios/busca", actionLabel: "Buscar profissionais" },
+  { id: 5, title: "Gestao do Escritorio", target: '[data-view="administration"]', route: "/escritorio/administracao", actionLabel: "Abrir administracao" },
+  { id: 6, title: "Sala de Reuniao", target: '[data-people-hub="meetings"]', route: "/escritorio/inteligencia?tab=meetings", actionLabel: "Abrir reunioes" },
+  { id: 7, title: "Cursos", target: '[data-people-hub="courses"]', route: "/escritorio/inteligencia?tab=courses", actionLabel: "Abrir cursos" },
+  { id: 8, title: "Instalacoes", target: '[data-view="installations"]', route: "/escritorio/instalacoes", actionLabel: "Ver instalacoes" },
+  { id: 9, title: "Areas principais", target: ".sidebar", route: "/mercado", actionLabel: "Abrir Mercado" },
+  { id: 10, title: "Primeiras decisoes", target: "main", route: "/escritorio", actionLabel: "Voltar ao Escritorio" },
 ] as const;
 
 const CONCEPT_LABELS: Record<PersonalityConcept, { low: string; hint: string; high: string }> = {

@@ -95,5 +95,7 @@ export async function POST(request: Request) {
     return apiError("Nao foi possivel iniciar a sessao. A conta parcial foi removida.", 500);
   }
 
-  return apiSuccess({ next: "/criar-clube" });
+  const response = apiSuccess({ next: "/criar-clube" });
+  response.cookies.delete("guest_mode");
+  return response;
 }

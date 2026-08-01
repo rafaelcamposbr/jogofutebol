@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { isMissingSessionError } from "@/lib/auth/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logServerError, logServerEvent } from "@/lib/server/log";
 import { buildGuestLegacyState, buildLegacyState, ClubRecord, EventRecord, PressReleaseRecord } from "@/lib/game/legacy-state";
 
 export type GameAccess = {
@@ -29,25 +31,37 @@ export async function getGameAccess(options: {
     if (guestMode || options.allowPublic) {
       return { mode: guestMode ? "guest" : "public", initialState: buildGuestLegacyState(), verification: unrestrictedVerification };
     }
-    redirect("/login?next=/central");
+    redirect(`/error?reason=auth-unavailable&next=${encodeURIComponent(options.nextPath || "/mercado")}`);
   }
 
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
   const user = userData.user;
 
   if (!user) {
     if (guestMode || options.allowPublic) {
       return { mode: guestMode ? "guest" : "public", initialState: buildGuestLegacyState(), verification: unrestrictedVerification };
     }
-    redirect("/login?next=/central");
+    if (userError && !isMissingSessionError(userError)) {
+      logServerError("auth", "game_session_lookup_failed", userError, { nextPath: options.nextPath });
+      redirect(`/error?reason=session-unavailable&next=${encodeURIComponent(options.nextPath || "/mercado")}`);
+    }
+    logServerEvent("auth", "game_session_missing", { nextPath: options.nextPath });
+    redirect(`/login?next=${encodeURIComponent(options.nextPath || "/mercado")}`);
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("email_game_verified,whatsapp_game_verified")
     .eq("id", user.id)
-    .single<{ email_game_verified: boolean; whatsapp_game_verified: boolean }>();
-  if (!profile) redirect("/error?reason=profile");
+    .maybeSingle<{ email_game_verified: boolean; whatsapp_game_verified: boolean }>();
+  if (profileError) {
+    logServerError("profile", "game_profile_lookup_failed", profileError, { nextPath: options.nextPath });
+    redirect(`/error?reason=profile-unavailable&next=${encodeURIComponent(options.nextPath || "/mercado")}`);
+  }
+  if (!profile) {
+    logServerEvent("profile", "game_profile_missing", { nextPath: options.nextPath });
+    redirect(`/error?reason=profile-missing&next=${encodeURIComponent(options.nextPath || "/mercado")}`);
+  }
 
   const verification = {
     email: profile.email_game_verified,
@@ -56,14 +70,24 @@ export async function getGameAccess(options: {
   if (options.requireVerification && !verification[options.requireVerification]) {
     const verificationPath = options.requireVerification === "email" ? "/verificar-email" : "/verificar-whatsapp";
     const nextPath = options.nextPath || (options.requireVerification === "email" ? "/imprensa" : "/escritorio");
+    logServerEvent("navigation", "verification_required", {
+      channel: options.requireVerification,
+      from: nextPath,
+      to: verificationPath,
+    });
     redirect(`${verificationPath}?next=${encodeURIComponent(nextPath)}`);
   }
 
-  const { data: club } = await supabase
+  const { data: club, error: clubError } = await supabase
     .from("clubs")
     .select("*")
     .eq("owner_id", user.id)
     .maybeSingle<ClubRecord>();
+
+  if (clubError) {
+    logServerError("navigation", "game_club_lookup_failed", clubError, { nextPath: options.nextPath });
+    redirect(`/error?reason=club-unavailable&next=${encodeURIComponent(options.nextPath || "/mercado")}`);
+  }
 
   if (!club) {
     if (options.requireClub === false) {
@@ -72,7 +96,7 @@ export async function getGameAccess(options: {
     redirect("/criar-clube");
   }
 
-  const [{ data: releases }, { data: events }] = await Promise.all([
+  const [releaseResult, eventResult] = await Promise.all([
     supabase
       .from("press_releases")
       .select("*")
@@ -86,11 +110,17 @@ export async function getGameAccess(options: {
       .order("created_at", { ascending: false })
       .limit(60),
   ]);
+  if (releaseResult.error) logServerError("navigation", "press_releases_lookup_failed", releaseResult.error);
+  if (eventResult.error) logServerError("navigation", "events_lookup_failed", eventResult.error);
 
   return {
     mode: "authenticated",
     userEmail: user.email || undefined,
     verification,
-    initialState: buildLegacyState(club, (releases || []) as PressReleaseRecord[], (events || []) as EventRecord[]),
+    initialState: buildLegacyState(
+      club,
+      (releaseResult.data || []) as PressReleaseRecord[],
+      (eventResult.data || []) as EventRecord[],
+    ),
   };
 }

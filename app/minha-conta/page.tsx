@@ -2,6 +2,7 @@ import { AccountManager } from "@/components/AccountManager";
 import { BetaBadge } from "@/components/BetaBadge";
 import { getAuthenticatedProfile } from "@/lib/auth/profile";
 import { maskWhatsapp } from "@/lib/auth/validation";
+import { TutorialHelp } from "@/components/TutorialHelp";
 
 export const dynamic = "force-dynamic";
 
@@ -27,10 +28,10 @@ export default async function MyAccountPage() {
           emailVerified={profile.email_game_verified}
           whatsappVerified={profile.whatsapp_game_verified}
         />
-        <div className="account-help-link">
+        <div className="account-help-link" id="ajuda">
           <h2>Ajuda e Tutorial</h2>
           <p>Retome as etapas de implantacao e as orientacoes contextuais do clube.</p>
-          <a href="/escritorio/inteligencia?tab=tutorial">Abrir tutorial</a>
+          <TutorialHelp />
         </div>
       </section>
     </main>

@@ -9,7 +9,7 @@ export default function NotFound() {
         <h1>Pagina nao encontrada</h1>
         <p>A rota solicitada nao existe nesta beta.</p>
         <div className="link-row">
-          <Link href="/central">Central</Link>
+          <Link href="/">Voltar ao jogo</Link>
           <Link href="/status">Status</Link>
         </div>
       </section>

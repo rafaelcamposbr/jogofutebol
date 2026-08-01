@@ -154,7 +154,7 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
         kind: "success",
       });
       window.setTimeout(() => {
-        window.location.assign(result.next || (mode === "signup" ? "/criar-clube" : "/central"));
+        window.location.assign(result.next || (mode === "signup" ? "/criar-clube" : "/"));
       }, 500);
     } catch {
       setMessage({ text: "Nao foi possivel concluir a acao. Tente novamente.", kind: "error" });

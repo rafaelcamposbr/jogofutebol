@@ -19,8 +19,13 @@ export function AccessBar({
         {mode === "authenticated" && !verification.email ? <Link href="/verificar-email">E-mail pendente</Link> : null}
         {mode === "authenticated" && !verification.whatsapp ? <Link href="/verificar-whatsapp">WhatsApp pendente</Link> : null}
         {mode === "authenticated" ? <Link href="/minha-conta">Minha Conta</Link> : null}
+        {mode === "authenticated" ? <Link href="/minha-conta#ajuda">Ajuda</Link> : null}
         <Link href="/status">Status</Link>
-        {mode === "authenticated" ? <Link href="/logout">Sair</Link> : <Link href="/login">Entrar</Link>}
+        {mode === "authenticated" ? (
+          <form className="logout-form" action="/logout" method="post">
+            <button type="submit">Sair</button>
+          </form>
+        ) : <Link href="/login">Entrar</Link>}
       </div>
     </div>
   );

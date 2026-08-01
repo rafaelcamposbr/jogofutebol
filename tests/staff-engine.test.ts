@@ -235,6 +235,7 @@ test("tutorial: possui dez etapas progressivas e alvos contextuais", () => {
   assert.equal(TUTORIAL_STEPS.length, 10);
   assert.deepEqual(TUTORIAL_STEPS.map((step) => step.id), [1,2,3,4,5,6,7,8,9,10]);
   assert.ok(TUTORIAL_STEPS.every((step) => step.target.length > 0));
+  assert.ok(TUTORIAL_STEPS.every((step) => step.route.startsWith("/") && step.actionLabel.length > 0));
 });
 
 test("conceitos: lista aprovada permanece completa", () => {

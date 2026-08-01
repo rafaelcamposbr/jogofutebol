@@ -1,5 +1,7 @@
-import { GameRoute } from "@/components/GameRoute";
+import { redirectToAuthenticatedHome } from "@/lib/auth/home";
 
-export default function CentralPage() {
-  return <GameRoute />;
+export const dynamic = "force-dynamic";
+
+export default async function CentralPage() {
+  await redirectToAuthenticatedHome("/central", "/login");
 }

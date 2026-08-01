@@ -172,6 +172,7 @@
 }
 
 .access-actions a,
+.access-actions .logout-form button,
 .link-row a,
 .auth-actions a {
   border: 1px solid #c8d0c9;
@@ -181,6 +182,16 @@
   padding: 9px 12px;
   font-weight: 850;
   text-decoration: none;
+}
+
+.logout-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.logout-form button {
+  cursor: pointer;
+  font: inherit;
 }
 
 .home-entry {
@@ -813,14 +824,16 @@
 .tutorial-center ol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; padding: 16px 0; list-style: none; }
 .tutorial-center li { border-bottom: 1px solid #dce0db; padding: 8px; color: #68706b; }
 .tutorial-center li.done { color: #07583d; }
+.tutorial-center li.skipped { color: #7a5d12; text-decoration: line-through; }
 .tutorial-center li.current { border-color: #d8a21a; background: #fff8dc; color: #171a18; font-weight: 900; }
 .tutorial-center-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.tutorial-center-link { display: inline-block; margin-bottom: 10px; text-decoration: none; }
 
 .tutorial-coach {
   position: fixed;
   left: 18px;
   bottom: 18px;
-  z-index: 65;
+  z-index: 1000;
   width: min(410px, calc(100vw - 36px));
   max-height: calc(100vh - 110px);
   overflow: auto;
@@ -830,6 +843,9 @@
   color: #171a18;
   padding: 14px;
   box-shadow: 0 20px 55px rgba(17, 20, 19, 0.22);
+  isolation: isolate;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 .tutorial-coach header { display: flex; align-items: center; gap: 9px; }
 .tutorial-coach header div { min-width: 0; flex: 1; }
@@ -843,7 +859,19 @@
 .tutorial-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .tutorial-actions button { min-width: 0; padding-inline: 4px; font-size: 0.72rem; }
 .tutorial-actions button.primary { border-color: #07583d; background: #0b7a53; color: #fff; }
+.tutorial-related { width: 100%; margin-bottom: 8px; border: 1px solid #07583d; border-radius: 5px; background: #eef8f2; color: #07583d; padding: 8px 10px; font-weight: 900; }
 .tutorial-end { width: 100%; margin-top: 7px; border-color: transparent; color: #7a300f; }
+.tutorial-error button,
+.tutorial-resume-actions button,
+.tutorial-confirm button { border: 1px solid #aeb7af; border-radius: 5px; background: #fff; color: #202421; padding: 8px 10px; font-weight: 850; }
+.tutorial-resume-actions,
+.tutorial-confirm > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.tutorial-resume-actions .primary { border-color: #07583d; background: #0b7a53; color: #fff; }
+.tutorial-error-message { border-left: 3px solid #a72f2f; background: #fff0ed; color: #75251f !important; padding: 8px; }
+.tutorial-confirm { margin-top: 10px; border: 1px solid #d9a8a0; background: #fff6f3; padding: 10px; }
+.tutorial-confirm p { margin: 4px 0 9px; }
+.tutorial-confirm .danger,
+.tutorial-center-actions .danger { border-color: #973b32; color: #7a2018; }
 .tutorial-highlight { outline: 4px solid rgba(216, 162, 26, 0.9) !important; outline-offset: 4px; position: relative; z-index: 64; }
 
 .people-entry-band {

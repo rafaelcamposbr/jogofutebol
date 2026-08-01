@@ -1,7 +1,8 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getApiAuthContext } from "@/lib/auth/api";
+import { apiError, getApiAuthContext } from "@/lib/auth/api";
+import { logServerError } from "@/lib/server/log";
 import {
   describePersonality,
   generateNaturalTalents,
@@ -19,11 +20,15 @@ export async function getStaffContext() {
   const context = await getApiAuthContext();
   if (context.error) return { ok: false as const, error: context.error };
   const authenticated = context as Extract<typeof context, { user: unknown }>;
-  const { data: club } = await authenticated.admin
+  const { data: club, error: clubError } = await authenticated.admin
     .from("clubs")
     .select("id,name,legal_model,cash_balance")
     .eq("owner_id", authenticated.user.id)
     .maybeSingle();
+  if (clubError) {
+    logServerError("navigation", "staff_club_lookup_failed", clubError);
+    return { ok: false as const, error: apiError("Nao foi possivel carregar o clube agora.", 503) };
+  }
   return {
     ok: true as const,
     supabase: authenticated.supabase,

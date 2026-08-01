@@ -125,11 +125,11 @@ Teste:
 - `/cadastro`
 - `/recuperar-senha`
 - `/experimentar`
-- `/central`
+- `/central` (redirecionamento de compatibilidade)
 - `/imprensa`
 - `/imprensa/clube/atletico-do-vale`
 - `/status`
 
 ## 6. Usuario de teste
 
-Crie um usuario pelo fluxo `/cadastro`. Depois entre, crie um clube em `/criar-clube` e confirme o redirecionamento para `/central`.
+Crie um usuario pelo fluxo `/cadastro`. Depois entre, crie um clube em `/criar-clube` e confirme o redirecionamento para `/mercado` enquanto o WhatsApp estiver pendente ou para `/escritorio` quando estiver confirmado.

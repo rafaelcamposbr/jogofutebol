@@ -12,7 +12,7 @@ export async function updateSupabaseSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet, headers) {
+      setAll(cookiesToSet, headers = {}) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
@@ -21,6 +21,12 @@ export async function updateSupabaseSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  const { error } = await supabase.auth.getClaims();
+  if (error) {
+    console.info("[auth] proxy_session_refresh_failed", {
+      path: request.nextUrl.pathname,
+      errorCode: error.code || error.name,
+    });
+  }
   return response;
 }

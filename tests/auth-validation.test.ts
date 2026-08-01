@@ -80,6 +80,6 @@ test("classifica e normaliza e-mail e WhatsApp com mascara", () => {
 
 test("bloqueia redirecionamento externo", () => {
   assert.equal(safeNextPath("/imprensa"), "/imprensa");
-  assert.equal(safeNextPath("https://example.com"), "/central");
-  assert.equal(safeNextPath("//example.com"), "/central");
+  assert.equal(safeNextPath("https://example.com"), "/");
+  assert.equal(safeNextPath("//example.com"), "/");
 });

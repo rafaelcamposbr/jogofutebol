@@ -28,7 +28,7 @@ export default async function StatusPage() {
           <div className="status-item"><span>Modo demonstrativo</span><strong>{status.demoFeatures} funcoes</strong></div>
         </div>
         <div className="link-row" style={{ marginTop: 16 }}>
-          <Link href="/central">Central</Link>
+          <Link href="/">Voltar ao jogo</Link>
           <Link href="/login">Entrar</Link>
           <Link href="/experimentar">Experimentar</Link>
         </div>

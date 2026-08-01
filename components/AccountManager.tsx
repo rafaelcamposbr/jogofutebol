@@ -51,7 +51,9 @@ export function AccountManager({ emailVerified, whatsappVerified }: { emailVerif
         {!emailVerified ? <Link href="/verificar-email">Confirmar e-mail</Link> : null}
         {!whatsappVerified ? <Link href="/verificar-whatsapp">Confirmar WhatsApp</Link> : null}
         <Link href="/recuperar-senha">Alterar senha</Link>
-        <Link href="/logout">Sair</Link>
+        <form className="logout-form" action="/logout" method="post">
+          <button type="submit">Sair</button>
+        </form>
       </div>
 
       <details id="email" className="account-editor">

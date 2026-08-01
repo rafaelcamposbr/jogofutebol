@@ -25,7 +25,7 @@ export function PasswordUpdateForm() {
       setMessage("Nao foi possivel alterar a senha. Solicite um novo link.");
       return;
     }
-    window.location.assign("/central");
+    window.location.assign("/");
   }
 
   return (
