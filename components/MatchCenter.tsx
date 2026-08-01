@@ -21,8 +21,12 @@ export function MatchCenter({ initialView }: { initialView: any }) {
   async function command(type: string, payload: Record<string, unknown> = {}) { const data = await update("POST", "", { type, payload }); if (data) { setMessage(data.appliesFromMinute ? `Comando salvo para o minuto ${data.appliesFromMinute}.` : "Comando aplicado."); await refresh(); } }
   useEffect(() => {
     if (view.match.status !== "in_progress") return;
-    const timer = window.setInterval(() => { void update("POST", "/process"); }, 1800);
-    return () => window.clearInterval(timer);
+    let cancelled = false;
+    let timer = window.setTimeout(async function poll() {
+      await update("POST", "/process");
+      if (!cancelled) timer = window.setTimeout(poll, 1800);
+    }, 1800);
+    return () => { cancelled = true; window.clearTimeout(timer); };
   }, [view.match.status, id]);
   const homePlayers = view.teams?.home.players || []; const awayPlayers = view.teams?.away.players || [];
   const substitutions = view.substitutions || [];
