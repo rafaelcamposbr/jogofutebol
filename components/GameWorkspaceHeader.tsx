@@ -11,11 +11,10 @@ export function GameWorkspaceHeader({ clubName, userEmail }: { clubName: string;
           <span>Gestao esportiva</span>
         </div>
         <nav aria-label="Gestao esportiva">
-          <Link href="/escritorio">Escritorio</Link>
           <Link href="/imprensa">Imprensa</Link>
           <Link href="/elenco">Elenco</Link>
-          <Link href="/elenco/tatica">Tatica</Link>
           <Link href="/mercado">Mercado</Link>
+          <Link href="/escritorio">Escritorio</Link>
           <Link href="/calendario">Calendario</Link>
         </nav>
       </header>

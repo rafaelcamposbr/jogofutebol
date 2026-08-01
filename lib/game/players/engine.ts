@@ -83,7 +83,7 @@ export function calculateMonthlySalary(overall: number, role: keyof typeof SALAR
   return Math.round((SALARY_MODEL.baseMonthly * Math.pow(Math.max(0.35, overall / 55), SALARY_MODEL.overallExponent) * SALARY_MODEL.roleMultiplier[role]) / 100) * 100;
 }
 
-export function generatePlayer(input: { scopeId: string; clubId: string | null; index: number; position: PlayerPosition; source: "initial_squad" | "free_agent_market"; today?: string }) {
+export function generatePlayer(input: { scopeId: string; clubId: string | null; index: number; position: PlayerPosition; source: "initial_squad" | "free_agent_market" | "tryout"; today?: string }) {
   const seed = `${input.scopeId}:${input.source}:${input.index}:${input.position}`;
   const random = createSeededRandom(seed);
   const bias = positionBias(input.position);
@@ -119,7 +119,7 @@ export function generatePlayer(input: { scopeId: string; clubId: string | null; 
       birth_date: birthDate, nationality: "Brasil", secondary_nationality: null, height_cm: input.position === "GK" ? random.int(184, 201) : random.int(166, 193),
       weight_kg: input.position === "GK" ? random.int(78, 96) : random.int(62, 89), preferred_foot: random.chance(0.22) ? "left" : "right",
       weak_foot_level: random.int(1, 4), squad_number: input.clubId ? input.index + 1 : null, main_position: input.position,
-      status: input.clubId ? "contracted" : "free_agent", squad_role: role, current_overall: overall,
+      status: input.clubId ? "contracted" : input.source === "tryout" ? "tryout_candidate" : "free_agent", squad_role: input.source === "tryout" ? "development" : role, current_overall: overall,
       public_potential_band: age <= 21 && overall >= 57 ? "promising" : age <= 23 ? "uncertain" : overall >= 64 ? "stable" : "limited",
       captain_rank: concepts.some((item) => item.concept === "leadership" && item.level >= 4) ? random.int(2, 5) : random.int(0, 2),
       generated_source: input.source, generation_index: input.index,

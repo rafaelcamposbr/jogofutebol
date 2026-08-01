@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { FORMATIONS, FORMATION_SLOTS, buildCoachRecommendation, suggestLineup, type Formation, type LineupAssignment, type Mentality } from "@/lib/game/tactics/engine";
 
-type TacticsPlayer = { id: string; known_as: string; main_position: any; current_overall: number; dynamic: { tactical_familiarity: number; physical_condition: number } | null };
+type TacticsPlayer = { id: string; known_as: string; main_position: any; observed_level: string; dynamic: { physical_condition: number } | null };
 
 export function TacticsBoard({ setup }: { setup: any }) {
   const players = setup.players as TacticsPlayer[];
@@ -21,8 +21,8 @@ export function TacticsBoard({ setup }: { setup: any }) {
     const candidates = players.map((player) => ({
       id: player.id,
       main_position: player.main_position,
-      current_overall: Number(player.current_overall),
-      tactical_familiarity: Number(player.dynamic?.tactical_familiarity || 45),
+      evaluationScore: 50,
+      tactical_familiarity: 50,
     }));
     setAssignments(suggestLineup(next, candidates));
   }
@@ -50,9 +50,9 @@ export function TacticsBoard({ setup }: { setup: any }) {
       <main className="tactics-main">
         <section className="football-pitch" aria-label={`Escalacao ${formation}`}>{FORMATION_SLOTS[formation].map((slot) => {
           const assignment = assignments.find((item) => item.slotKey === slot.key);
-          return <label className="pitch-slot" key={slot.key} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}><span>{slot.key}</span><select aria-label={`Jogador em ${slot.key}`} value={assignment?.playerId || ""} onChange={(event) => assign(slot.key, event.target.value)}>{players.map((player) => <option value={player.id} key={player.id}>{player.known_as} - {player.main_position} - {Math.round(player.current_overall)}</option>)}</select></label>;
+          return <label className="pitch-slot" key={slot.key} style={{ left: `${slot.x}%`, top: `${slot.y}%` }}><span>{slot.key}</span><select aria-label={`Jogador em ${slot.key}`} value={assignment?.playerId || ""} onChange={(event) => assign(slot.key, event.target.value)}>{players.map((player) => <option value={player.id} key={player.id}>{player.known_as} - {player.main_position} - {player.observed_level}</option>)}</select></label>;
         })}</section>
-        <section className="coach-recommendation"><h2>Leitura do tecnico</h2><p><strong>Plano:</strong> {recommendation.plan}</p><p><strong>Ponto forte:</strong> {recommendation.strength}</p><p><strong>Risco:</strong> {recommendation.risk}</p></section>
+        <section className="coach-recommendation"><h2>Leitura do tecnico</h2><p><strong>Plano:</strong> {recommendation.plan}</p><p><strong>Ponto forte:</strong> {recommendation.positive}</p><p><strong>Risco:</strong> {recommendation.risk}</p></section>
         <section className="bench-strip"><h2>Banco</h2>{assignments.filter((item) => item.isStarter === false).map((item) => <div key={item.slotKey}><span>{item.slotKey}</span><strong>{playerById[item.playerId]?.known_as}</strong><small>{playerById[item.playerId]?.main_position}</small></div>)}</section>
       </main>
     </div>

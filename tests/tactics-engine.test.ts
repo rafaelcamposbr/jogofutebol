@@ -3,7 +3,7 @@ import test from "node:test";
 import { FORMATIONS, FORMATION_SLOTS, suggestLineup, validateLineup } from "../lib/game/tactics/engine.ts";
 import { INITIAL_SQUAD_POSITIONS } from "../lib/game/players/config.ts";
 
-const players = INITIAL_SQUAD_POSITIONS.map((position, index) => ({ id: `p-${index}`, main_position: position, current_overall: 50 + (index % 20), tactical_familiarity: 45 }));
+const players = INITIAL_SQUAD_POSITIONS.map((position, index) => ({ id: `p-${index}`, main_position: position, evaluationScore: 50 + (index % 20), tactical_familiarity: 45 }));
 
 test("oito formacoes possuem onze vagas e um goleiro", () => {
   assert.equal(FORMATIONS.length, 8);

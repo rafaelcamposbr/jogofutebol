@@ -49,7 +49,7 @@ export function sanitizeLegacyEmployee(value: unknown) {
   const roleLabel = text("roleLabel", 120);
   const groupId = text("groupId", 40);
   if (!legacyId || name.length < 2 || roleId.length < 2 || roleLabel.length < 2
-    || !["coaches", "technical", "medical", "administrative", "operations"].includes(groupId)) return null;
+    || !["coaches", "technical", "football", "medical", "administrative", "operations"].includes(groupId)) return null;
   const attributes = raw.attributes && typeof raw.attributes === "object" && !Array.isArray(raw.attributes)
     ? Object.fromEntries(Object.entries(raw.attributes as Record<string, unknown>).slice(0, 40).map(([key, item]) => [
       key.slice(0, 80),

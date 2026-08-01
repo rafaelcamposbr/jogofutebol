@@ -3,6 +3,9 @@ import { BetaBadge } from "@/components/BetaBadge";
 import { getAuthenticatedProfile } from "@/lib/auth/profile";
 import { maskWhatsapp } from "@/lib/auth/validation";
 import { TutorialHelp } from "@/components/TutorialHelp";
+import { AccessBar } from "@/components/AccessBar";
+import { AppPageHeader } from "@/components/AppPageHeader";
+import { ClubBankruptcyManager } from "@/components/ClubBankruptcyManager";
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +13,10 @@ export default async function MyAccountPage() {
   const { profile } = await getAuthenticatedProfile();
 
   return (
-    <main className="plain-page account-page">
+    <><AccessBar mode="authenticated" userEmail={profile.email} verification={{ email: profile.email_game_verified, whatsapp: profile.whatsapp_game_verified }} /><main className="plain-page account-page">
       <section className="plain-card">
         <BetaBadge />
-        <h1>Minha Conta</h1>
+        <AppPageHeader title="Minha Conta" subtitle="Dados de acesso e gestao do clube." backHref="/escritorio" />
         <dl className="account-grid">
           <div><dt>Nome de usuario</dt><dd>{profile.username}</dd></div>
           <div><dt>Nome</dt><dd>{profile.first_name}</dd></div>
@@ -33,7 +36,12 @@ export default async function MyAccountPage() {
           <p>Retome as etapas de implantacao e as orientacoes contextuais do clube.</p>
           <TutorialHelp />
         </div>
+        <details className="account-editor club-management" id="gestao-clube">
+          <summary>Gestao do clube</summary>
+          <h2>Declarar falencia</h2>
+          <ClubBankruptcyManager />
+        </details>
       </section>
-    </main>
+    </main></>
   );
 }

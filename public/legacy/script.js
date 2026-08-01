@@ -481,54 +481,12 @@
     calendarAlerts: "/calendario/alertas",
   };
 
-  const STAFF_GROUPS = [
-    { id: "coaches", label: "Treinadores" },
-    { id: "technical", label: "Equipe tecnica" },
-    { id: "medical", label: "Departamento medico" },
-    { id: "administrative", label: "Equipe administrativa" },
-    { id: "operations", label: "Operacoes e infraestrutura" },
-  ];
-
-  const STAFF_ROLE_CATALOG = [
-    { id: "head-coach", label: "Treinador principal", group: "coaches", baseSalary: 8500, officeRequired: true, required: true, area: "Tatica" },
-    { id: "assistant-coach", label: "Auxiliar tecnico", group: "coaches", baseSalary: 4200, officeRequired: true, required: true, area: "Lideranca" },
-    { id: "youth-coach", label: "Treinador da categoria de base", group: "coaches", baseSalary: 3600, officeRequired: true, required: true, area: "Desenvolvimento de jovens" },
-    { id: "goalkeeper-coach", label: "Treinador de goleiros", group: "coaches", baseSalary: 3300, officeRequired: true, required: false, area: "Tecnica" },
-    { id: "individual-coach", label: "Treinador individual", group: "coaches", baseSalary: 3100, officeRequired: true, required: false, area: "Tecnica" },
-    { id: "technical-coach", label: "Treinador tecnico", group: "coaches", baseSalary: 3400, officeRequired: true, required: false, area: "Tecnica" },
-    { id: "tactical-coach", label: "Treinador tatico", group: "coaches", baseSalary: 3600, officeRequired: true, required: false, area: "Tatica" },
-    { id: "fitness-coach", label: "Preparador fisico", group: "technical", baseSalary: 3900, officeRequired: true, required: true, area: "Fisica" },
-    { id: "physiologist", label: "Fisiologista", group: "technical", baseSalary: 4300, officeRequired: true, required: false, area: "Fisica" },
-    { id: "performance-analyst", label: "Analista de desempenho", group: "technical", baseSalary: 3800, officeRequired: true, required: true, area: "Analise" },
-    { id: "opponent-analyst", label: "Analista de adversarios", group: "technical", baseSalary: 3500, officeRequired: true, required: false, area: "Analise" },
-    { id: "technical-coordinator", label: "Coordenador tecnico", group: "technical", baseSalary: 6100, officeRequired: true, required: false, area: "Gestao" },
-    { id: "football-director", label: "Diretor de futebol", group: "technical", baseSalary: 9200, officeRequired: true, required: true, area: "Gestao" },
-    { id: "football-manager", label: "Gerente de futebol", group: "technical", baseSalary: 5600, officeRequired: true, required: false, area: "Gestao" },
-    { id: "scout", label: "Olheiro", group: "technical", baseSalary: 2800, officeRequired: true, required: true, area: "Observacao" },
-    { id: "chief-scout", label: "Chefe de olheiros", group: "technical", baseSalary: 5200, officeRequired: true, required: false, area: "Observacao" },
-    { id: "doctor", label: "Medico", group: "medical", baseSalary: 7600, officeRequired: false, required: true, area: "Medica" },
-    { id: "physiotherapist", label: "Fisioterapeuta", group: "medical", baseSalary: 4300, officeRequired: false, required: true, area: "Medica" },
-    { id: "masseur", label: "Massagista", group: "medical", baseSalary: 2500, officeRequired: false, required: false, area: "Medica" },
-    { id: "nutritionist", label: "Nutricionista", group: "medical", baseSalary: 3600, officeRequired: false, required: false, area: "Medica" },
-    { id: "psychologist", label: "Psicologo", group: "medical", baseSalary: 3900, officeRequired: false, required: false, area: "Lideranca" },
-    { id: "rehab-coach", label: "Preparador de reabilitacao", group: "medical", baseSalary: 3700, officeRequired: false, required: false, area: "Medica" },
-    { id: "financial-director", label: "Diretor financeiro", group: "administrative", baseSalary: 6900, officeRequired: true, required: true, area: "Financas" },
-    { id: "accountant", label: "Contador", group: "administrative", baseSalary: 3600, officeRequired: true, required: true, area: "Financas" },
-    { id: "lawyer", label: "Advogado", group: "administrative", baseSalary: 5200, officeRequired: true, required: true, area: "Negociacao" },
-    { id: "admin-manager", label: "Gerente administrativo", group: "administrative", baseSalary: 4700, officeRequired: true, required: true, area: "Gestao" },
-    { id: "marketing-manager", label: "Responsavel por marketing", group: "administrative", baseSalary: 4100, officeRequired: true, required: true, area: "Marketing" },
-    { id: "sponsor-manager", label: "Responsavel por patrocinios", group: "administrative", baseSalary: 4300, officeRequired: true, required: true, area: "Negociacao" },
-    { id: "press-officer", label: "Assessor de imprensa", group: "administrative", baseSalary: 3300, officeRequired: true, required: false, area: "Marketing" },
-    { id: "property-manager", label: "Gestor de patrimonio", group: "administrative", baseSalary: 3900, officeRequired: true, required: false, area: "Gestao" },
-    { id: "admin-staff", label: "Funcionario administrativo", group: "administrative", baseSalary: 2100, officeRequired: true, required: true, area: "Gestao" },
-    { id: "groundskeeper", label: "Responsavel pelo gramado", group: "operations", baseSalary: 2500, officeRequired: false, required: false, area: "Gestao" },
-    { id: "maintenance-staff", label: "Funcionario de manutencao", group: "operations", baseSalary: 2200, officeRequired: false, required: true, area: "Gestao" },
-    { id: "security", label: "Seguranca", group: "operations", baseSalary: 2100, officeRequired: false, required: false, area: "Lideranca" },
-    { id: "kitman", label: "Roupeiro", group: "operations", baseSalary: 2100, officeRequired: false, required: false, area: "Gestao" },
-    { id: "cook", label: "Cozinheiro", group: "operations", baseSalary: 2300, officeRequired: false, required: false, area: "Gestao" },
-    { id: "lodging-manager", label: "Responsavel pelo alojamento", group: "operations", baseSalary: 2900, officeRequired: false, required: false, area: "Gestao" },
-    { id: "facility-manager", label: "Gerente de instalacoes", group: "operations", baseSalary: 4300, officeRequired: false, required: false, area: "Gestao" },
-  ];
+  const STAFF_GROUPS = Array.isArray(globalThis.__STAFF_CATALOG__?.groups)
+    ? globalThis.__STAFF_CATALOG__.groups
+    : [];
+  const STAFF_ROLE_CATALOG = Array.isArray(globalThis.__STAFF_CATALOG__?.roles)
+    ? globalThis.__STAFF_CATALOG__.roles
+    : [];
 
   const STAFF_FIRST_NAMES = ["Amanda", "Bruno", "Camila", "Diego", "Eduardo", "Fernanda", "Gustavo", "Helena", "Marcos", "Renata", "Samuel", "Tatiane"];
   const STAFF_LAST_NAMES = ["Almeida", "Barros", "Campos", "Dias", "Freitas", "Lopes", "Martins", "Nogueira", "Queiroz", "Rezende", "Teixeira", "Vieira"];
@@ -741,12 +699,18 @@
       filters: ((raw.staff || {}).filters || {}),
       activeTab: ((raw.staff || {}).activeTab || "overview"),
     };
-    merged.constructions = raw.constructions || [];
+    merged.constructions = (raw.constructions || []).map((construction) => {
+      if (construction.kind !== "admin-room" || construction.status !== "in_progress") return construction;
+      const remaining = new Date(construction.endAt).getTime() - Clock.now();
+      return remaining > 2 * 60 * 60 * 1000
+        ? { ...construction, endAt: addMinutes(Clock.iso(), 120) }
+        : construction;
+    });
     merged.promises = raw.promises || [];
     merged.players = {
-      squad: ((raw.players || {}).squad || []),
-      tryoutFindings: ((raw.players || {}).tryoutFindings || []),
-      youth: ((raw.players || {}).youth || []),
+      squad: ((raw.players || {}).squad || []).map(withoutHiddenLegacyPlayerValues),
+      tryoutFindings: ((raw.players || {}).tryoutFindings || []).map(withoutHiddenLegacyPlayerValues),
+      youth: ((raw.players || {}).youth || []).map(withoutHiddenLegacyPlayerValues),
     };
     merged.youthAcademy = { ...base.youthAcademy, ...(raw.youthAcademy || {}) };
     merged.events = raw.events || [];
@@ -763,6 +727,11 @@
         rep.history = [{ date: foundedAt, value: rep.value, reason: "Valor inicial do clube." }];
       }
     });
+  }
+
+  function withoutHiddenLegacyPlayerValues(player) {
+    const { current, potential, ...safe } = player || {};
+    return { ...safe, observedLevel: safe.observedLevel || (current || potential ? "Relatorio anterior removido; solicite nova observacao." : "Sem relatorio") };
   }
 
   function seedStaffMarket(target) {
@@ -832,8 +801,7 @@
     };
 
     const focus = {
-      coaches: ["technical", "tactical", "leadership", "youthDevelopment"],
-      technical: ["fitness", "analysis", "management", "scouting"],
+      football: ["technical", "tactical", "leadership", "youthDevelopment", "fitness", "analysis", "management", "scouting"],
       medical: ["medical", "fitness", "leadership"],
       administrative: ["finances", "marketing", "negotiation", "management"],
       operations: ["management", "leadership", "fitness"],
@@ -849,7 +817,7 @@
     const demands = [];
     if (reputation > 3.5) demands.push("estrutura minima adequada");
     if (role.officeRequired) demands.push("sala administrativa disponivel");
-    if (role.group === "coaches") demands.push("projeto esportivo claro");
+    if (role.group === "football") demands.push("projeto esportivo claro");
     if (role.group === "medical") demands.push("instalacoes medicas compativeis");
     if (role.group === "operations") demands.push("responsabilidades bem definidas");
     return demands;
@@ -962,7 +930,12 @@
   }
 
   function money(value) {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value || 0));
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(value || 0));
   }
 
   function number(value, digits = 0) {
@@ -1725,8 +1698,8 @@
     `;
   }
 
-  function staffRoleOptions(selectedRoleId = "") {
-    return STAFF_ROLE_CATALOG.map((role) => `
+  function staffRoleOptions(selectedRoleId = "", groupId = "") {
+    return STAFF_ROLE_CATALOG.filter((role) => !groupId || role.group === groupId).map((role) => `
       <option value="${role.id}" ${selectedRoleId === role.id ? "selected" : ""}>${role.label}</option>
     `).join("");
   }
@@ -1751,6 +1724,7 @@
       if (!filters.status && professional.status === "rejected") return false;
       if (filters.name && !professional.name.toLowerCase().includes(filters.name.toLowerCase())) return false;
       if (filters.group && professional.groupId !== filters.group) return false;
+      if (filters.role && !STAFF_ROLE_CATALOG.some((role) => role.id === filters.role && role.group === filters.group)) return false;
       if (filters.role && professional.primaryRoleId !== filters.role) return false;
       if (filters.level && staffLevelFromAttributes(professional.attributes).score < Number(filters.level)) return false;
       if (filters.maxSalary && professional.desiredSalary > Number(filters.maxSalary)) return false;
@@ -1788,7 +1762,7 @@
     }
     if (role?.group === "medical") return hasMedicalFacility() ? 1 : 0.55;
     if (role?.group === "operations") return hasCtSignal() || hasStadiumSignal() ? 0.9 : 0.62;
-    if (role?.group === "coaches" || role?.group === "technical") return hasCtSignal() ? 0.9 : 0.58;
+    if (role?.group === "football") return hasCtSignal() ? 0.9 : 0.58;
     return 0.7;
   }
 
@@ -3941,9 +3915,9 @@
               </select>
             </label>
             <label class="field">Funcao
-              <select name="role">
-                <option value="">Todas</option>
-                ${staffRoleOptions(filters.role)}
+              <select name="role" ${filters.group ? "" : "disabled"}>
+                <option value="">Todas as funcoes deste grupo</option>
+                ${staffRoleOptions(filters.role, filters.group)}
               </select>
             </label>
             <label class="field">Nivel minimo
@@ -4676,7 +4650,7 @@
       ${players.map((player) => `
         <div class="record">
           <div class="record-title">${escapeHtml(player.name)} <span class="badge">${player.position}</span></div>
-          <div class="record-meta">Idade: ${player.age} &middot; Qualidade atual: ${number(player.current, 0)} &middot; Potencial: ${number(player.potential, 0)} &middot; Desenvolvimento: ${escapeHtml(player.development)}</div>
+          <div class="record-meta">Idade: ${player.age} &middot; Leitura: ${escapeHtml(player.observedLevel || "Sem relatorio")} &middot; Desenvolvimento: ${escapeHtml(player.development)}</div>
           ${source === "tryout" ? `<button class="button small primary" data-action="hire-player" data-id="${player.id}">Contratar</button>` : ""}
           ${source === "youth" ? `<button class="button small primary" data-action="promote-youth" data-id="${player.id}">Promover jovem</button>` : ""}
         </div>
@@ -5020,6 +4994,16 @@
   }
 
   function handleInput(event) {
+    if (event.target.matches("#staff-filter-form select[name='group']")) {
+      const roleSelect = event.target.form?.elements.role;
+      if (roleSelect) {
+        const currentRole = STAFF_ROLE_CATALOG.find((role) => role.id === roleSelect.value);
+        const nextRole = currentRole?.group === event.target.value ? currentRole.id : "";
+        roleSelect.disabled = !event.target.value;
+        roleSelect.innerHTML = `<option value="">Todas as funcoes deste grupo</option>${staffRoleOptions(nextRole, event.target.value)}`;
+      }
+      return;
+    }
     if (event.target.closest("#create-club-form")) updateSetupPreview();
     if (event.target.closest("#youth-settings-form")) {
       const form = event.target.closest("#youth-settings-form");
@@ -5624,9 +5608,15 @@
 
   function applyStaffFilters(form) {
     const data = Object.fromEntries(new FormData(form).entries());
+    const selectedRole = STAFF_ROLE_CATALOG.find((role) => role.id === data.role);
+    if (selectedRole && selectedRole.group !== data.group) data.role = "";
     state.staff.filters = Object.fromEntries(
       Object.entries(data).filter(([, value]) => String(value || "").trim() !== "")
     );
+    const params = new URLSearchParams();
+    if (state.staff.filters.group) params.set("group", state.staff.filters.group);
+    if (state.staff.filters.role) params.set("role", state.staff.filters.role);
+    globalThis.history.replaceState({}, "", `/escritorio/funcionarios/busca${params.size ? `?${params}` : ""}`);
   }
 
   function refreshStaffMarket() {
@@ -5828,7 +5818,7 @@
       professionalName: employee.name,
       event: `Contratacao como ${employee.roleLabel}`,
       financialImpact: -proposal.offer.bonus,
-      sportingImpact: role.group === "coaches" || role.group === "technical" ? 1 : 0,
+      sportingImpact: role.group === "football" ? 1 : 0,
       institutionalImpact: candidate.reputation >= 3.5 ? PROVISIONAL_REPUTATION_IMPACTS.notableStaffHireInstitutional : 0,
     });
     if (candidate.reputation >= 3.5) {
@@ -5856,8 +5846,7 @@
     const role = staffRoleById(roleId);
     if (!role) return "";
     const managerByGroup = {
-      coaches: "Diretor de futebol",
-      technical: "Diretor de futebol",
+      football: "Executivo de futebol",
       medical: "Gerente administrativo",
       administrative: "Presidencia",
       operations: "Gestor de patrimonio",
@@ -5981,7 +5970,7 @@
       kind: "admin-room",
       title: `${mode === "purchase" ? "Compra" : "Aluguel"} de sala - ${option.label}`,
       cost,
-      buildUntil: addDays(Clock.iso(), 1),
+      buildUntil: addMinutes(Clock.iso(), 120),
       payload: { optionId: option.id, mode },
     });
   }
@@ -6182,17 +6171,15 @@
 
   function generatePlayers(count, origin, qualityBase = 30) {
     return Array.from({ length: count }, () => {
-      const current = clamp(qualityBase * 0.35 + randomInt(8, 38), 5, 82);
-      const potential = clamp(current + randomInt(8, 42), current, 96);
       const age = origin === "base" ? randomInt(15, 18) : randomInt(17, 27);
+      const developmentObservation = randomInt(1, 100);
       return {
         id: uid("player"),
         name: `${FIRST_NAMES[randomInt(0, FIRST_NAMES.length - 1)]} ${LAST_NAMES[randomInt(0, LAST_NAMES.length - 1)]}`,
         position: POSITIONS[randomInt(0, POSITIONS.length - 1)],
         age,
-        current,
-        potential,
-        development: potential - current > 30 ? "Rapido" : potential - current > 18 ? "Moderado" : "Lento",
+        observedLevel: qualityBase >= 70 ? "Leitura favoravel" : qualityBase >= 45 ? "Leitura inicial" : "Sem relatorio confiavel",
+        development: developmentObservation > 68 ? "Rapido" : developmentObservation > 34 ? "Moderado" : "Lento",
         origin,
         cityBorn: Math.random() > 0.45 ? state.club.city : "Cidade vizinha",
       };

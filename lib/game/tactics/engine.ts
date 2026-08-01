@@ -39,19 +39,19 @@ function positionCompatibility(playerPosition: PlayerPosition, slotPosition: Pla
   return groups.some((group) => group.includes(playerPosition) && group.includes(slotPosition)) ? 72 : playerPosition === "GK" || slotPosition === "GK" ? 0 : 28;
 }
 
-export function suggestLineup(formation: Formation, players: Array<{ id: string; main_position: PlayerPosition; current_overall: number; tactical_familiarity?: number; status?: string }>) {
+export function suggestLineup(formation: Formation, players: Array<{ id: string; main_position: PlayerPosition; evaluationScore: number; tactical_familiarity?: number; status?: string }>) {
   const available = [...players];
   const assignments = FORMATION_SLOTS[formation].map((target) => {
     const ranked = available.map((player) => ({
       player,
-      score: calculateRoleFit(positionCompatibility(player.main_position, target.position), Number(player.current_overall), player.tactical_familiarity || 45),
+      score: calculateRoleFit(positionCompatibility(player.main_position, target.position), Number(player.evaluationScore), player.tactical_familiarity || 45),
     })).sort((a, b) => b.score - a.score || a.player.id.localeCompare(b.player.id));
     const selected = ranked[0]?.player;
     if (!selected) throw new Error("insufficient_players");
     available.splice(available.findIndex((player) => player.id === selected.id), 1);
     return { slotKey: target.key, playerId: selected.id, position: target.position, role: target.role, isStarter: true };
   });
-  const bench = available.sort((a, b) => Number(b.current_overall) - Number(a.current_overall)).slice(0, 7).map((player, index) => ({ slotKey: `B${index + 1}`, playerId: player.id, position: player.main_position, role: "reserve", isStarter: false, benchOrder: index + 1 }));
+  const bench = available.sort((a, b) => Number(b.evaluationScore) - Number(a.evaluationScore)).slice(0, 7).map((player, index) => ({ slotKey: `B${index + 1}`, playerId: player.id, position: player.main_position, role: "reserve", isStarter: false, benchOrder: index + 1 }));
   return [...assignments, ...bench];
 }
 
@@ -59,7 +59,7 @@ export function buildCoachRecommendation(formation: Formation, mentality: Mental
   const defensiveCount = assignments.filter((item) => ["GK", "CB", "LB", "RB", "LWB", "RWB", "DM"].includes(item.position)).length;
   return {
     plan: mentality === "attacking" || mentality === "very_attacking" ? "Circular com ritmo alto e atacar os corredores quando o adversario perder compactacao." : "Controlar o centro e acelerar apenas quando houver superioridade clara.",
-    strength: defensiveCount >= 6 ? "Boa cobertura para proteger perdas de bola." : "Presenca numerica no ultimo terco.",
+    positive: defensiveCount >= 6 ? "Boa cobertura para proteger perdas de bola." : "Presenca numerica no ultimo terco.",
     risk: formation.startsWith("3-") ? "Os corredores exigem cobertura dos alas durante a transicao." : "Laterais simultaneamente altos podem expor as costas.",
   };
 }

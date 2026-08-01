@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { apiError, getApiAuthContext } from "@/lib/auth/api";
 import { logServerError } from "@/lib/server/log";
 import { generateFreeAgentMarket, generateInitialSquad } from "@/lib/game/players/engine";
+import { ensurePlayerRelationships } from "@/lib/game/relationships/server";
 
 type AdminClient = SupabaseClient;
 
@@ -34,7 +35,7 @@ function flattenSeeds(seeds: ReturnType<typeof generateInitialSquad>) {
   };
 }
 
-async function insertGeneratedPlayers(admin: AdminClient, seeds: ReturnType<typeof generateInitialSquad>) {
+export async function insertGeneratedPlayers(admin: AdminClient, seeds: ReturnType<typeof generateInitialSquad>) {
   const rows = flattenSeeds(seeds);
   const operations = [
     admin.from("players").upsert(rows.players, { onConflict: "id", ignoreDuplicates: true }),
@@ -63,7 +64,7 @@ export async function ensurePlayerWorld(admin: AdminClient, clubId: string) {
   }
 }
 
-export async function buildSquadOverview(admin: AdminClient, clubId: string) {
+export async function buildSquadOverview(admin: AdminClient, clubId: string, options: { internalEvaluation?: boolean } = {}) {
   await ensurePlayerWorld(admin, clubId);
   const { data: players, error } = await admin.from("players")
     .select("id,first_name,last_name,known_as,birth_date,nationality,height_cm,weight_kg,preferred_foot,weak_foot_level,squad_number,main_position,status,squad_role,current_overall,public_potential_band,captain_rank,created_at")
@@ -71,22 +72,28 @@ export async function buildSquadOverview(admin: AdminClient, clubId: string) {
   if (error) throw error;
   const ids = (players || []).map((player) => player.id);
   if (!ids.length) return { players: [], positionAptitudes: [], roleAptitudes: [] };
-  const [statuses, contracts, positions, roles] = await Promise.all([
+  const [statuses, contracts, positions, roles, consensus] = await Promise.all([
     admin.from("player_status").select("*").in("player_id", ids),
     admin.from("player_contracts").select("player_id,contract_start,contract_end,monthly_salary,squad_role_promised,status").in("player_id", ids).eq("status", "active"),
     admin.from("player_position_aptitudes").select("player_id,position,aptitude").in("player_id", ids),
     admin.from("player_role_aptitudes").select("player_id,role,aptitude").in("player_id", ids),
+    admin.from("player_report_consensus").select("player_id,category,consensus_label,confidence").eq("club_id", clubId).in("player_id", ids),
   ]);
-  [statuses, contracts, positions, roles].forEach((result) => { if (result.error) throw result.error; });
+  [statuses, contracts, positions, roles, consensus].forEach((result) => { if (result.error) throw result.error; });
   return {
-    players: (players || []).map((player) => ({
-      ...player,
-      dynamic: statuses.data?.find((status) => status.player_id === player.id) || null,
-      contract: contracts.data?.find((contract) => contract.player_id === player.id) || null,
-      age: calculateAge(player.birth_date),
-    })),
-    positionAptitudes: positions.data || [],
-    roleAptitudes: roles.data || [],
+    players: (players || []).map((player) => {
+      const { current_overall, weak_foot_level, ...safePlayer } = player;
+      return {
+        ...safePlayer,
+        ...(options.internalEvaluation ? { current_overall, weak_foot_level } : {}),
+        observed_level: consensus.data?.find((item) => item.player_id === player.id && item.category === "technical")?.consensus_label || "Sem relatorio",
+        dynamic: statuses.data?.find((status) => status.player_id === player.id) || null,
+        contract: contracts.data?.find((contract) => contract.player_id === player.id) || null,
+        age: calculateAge(player.birth_date),
+      };
+    }),
+    positionAptitudes: options.internalEvaluation ? positions.data || [] : [],
+    roleAptitudes: options.internalEvaluation ? roles.data || [] : [],
   };
 }
 
@@ -95,16 +102,19 @@ export async function buildFreeAgentMarket(admin: AdminClient) {
     .select("id,known_as,birth_date,nationality,preferred_foot,main_position,current_overall,public_potential_band")
     .eq("status", "free_agent").is("club_id", null).order("current_overall", { ascending: false }).limit(100);
   if (error) throw error;
-  return (data || []).map((player) => ({ ...player, age: calculateAge(player.birth_date) }));
+  return (data || []).map((player) => {
+    const { current_overall, ...safePlayer } = player;
+    void current_overall;
+    return { ...safePlayer, age: calculateAge(player.birth_date), observed_level: "Sem relatorio do clube" };
+  });
 }
 
 export async function buildPlayerProfile(admin: AdminClient, clubId: string, playerId: string) {
   await ensurePlayerWorld(admin, clubId);
   const { data: player, error } = await admin.from("players").select("*").eq("id", playerId).eq("club_id", clubId).maybeSingle();
   if (error || !player) return null;
-  const [attributes, hidden, positions, roles, concepts, status, contracts, stats, history, training, injuries, suspensions, meetings, memories, relationships] = await Promise.all([
-    admin.from("player_attributes").select("*").eq("player_id", playerId).maybeSingle(),
-    admin.from("player_hidden_traits").select("*").eq("player_id", playerId).maybeSingle(),
+  await ensurePlayerRelationships(admin, clubId, playerId);
+  const [positions, roles, concepts, status, contracts, stats, history, training, injuries, suspensions, meetings, memories, relationships, reports, consensus, authors] = await Promise.all([
     admin.from("player_position_aptitudes").select("position,aptitude,minutes_played,training_minutes").eq("player_id", playerId).order("aptitude", { ascending: false }),
     admin.from("player_role_aptitudes").select("role,aptitude,minutes_played,training_minutes").eq("player_id", playerId).order("aptitude", { ascending: false }),
     admin.from("player_personality_concepts").select("concept,level,is_core").eq("player_id", playerId),
@@ -117,20 +127,29 @@ export async function buildPlayerProfile(admin: AdminClient, clubId: string, pla
     admin.from("player_suspensions").select("*").eq("player_id", playerId).order("created_at", { ascending: false }),
     admin.from("player_meeting_results").select("classification,structured_reaction,created_at,meeting_id").eq("player_id", playerId).order("created_at", { ascending: false }).limit(20),
     admin.from("player_memories").select("memory_type,importance,emotional_weight,summary,status,deadline,created_at,expires_at").eq("player_id", playerId).order("created_at", { ascending: false }).limit(30),
-    admin.from("player_relationships").select("target_type,target_id,affinity,trust,respect,conflict,influence").eq("player_id", playerId),
+    admin.from("character_relationships").select("source_type,source_id,affinity,trust,respect,tension,professional_alignment,influence").eq("club_id", clubId).eq("target_type", "player").eq("target_id", playerId),
+    admin.from("player_reports").select("id,author_name,author_role,report_version,precision,uncertainty,confidence_label,age_status,summary,caveats,recommendation,created_at,valid_until").eq("club_id", clubId).eq("player_id", playerId).order("created_at", { ascending: false }),
+    admin.from("player_report_consensus").select("category,consensus_label,lower_bound,upper_bound,confidence,divergence,updated_at").eq("club_id", clubId).eq("player_id", playerId),
+    admin.from("employees").select("id,name,role_label,role_id").eq("club_id", clubId).eq("status", "active").in("role_id", ["scout","performance-analyst","performance-analysis-coordinator","head-coach"]),
   ]);
-  const hiddenData = hidden.data;
   const evidence = Math.min(100, 18 + (meetings.data?.length || 0) * 13 + (training.data?.length || 0) * 2);
+  const reportIds = (reports.data || []).map((item) => item.id);
+  const { data: reportEstimates } = reportIds.length
+    ? await admin.from("player_report_estimates").select("report_id,category,estimate_label,lower_bound,upper_bound").in("report_id", reportIds)
+    : { data: [] as Array<Record<string, unknown>> };
+  const { current_overall, weak_foot_level, ...safePlayer } = player;
+  void current_overall; void weak_foot_level;
   return {
-    player: { ...player, age: calculateAge(player.birth_date) },
-    attributes: attributes.data || null,
-    positions: positions.data || [], roles: roles.data || [], status: status.data || null,
+    player: { ...safePlayer, age: calculateAge(player.birth_date) },
+    positions: (positions.data || []).map((item) => ({ position: item.position, assessment: aptitudeBand(Number(item.aptitude)) })),
+    roles: (roles.data || []).map((item) => ({ role: item.role, assessment: aptitudeBand(Number(item.aptitude)) })), status: status.data || null,
     contracts: contracts.data || [], stats: stats.data || [], history: history.data || [], training: training.data || [],
     injuries: injuries.data || [], suspensions: suspensions.data || [], meetings: meetings.data || [], memories: memories.data || [],
-    relationships: relationships.data || [],
+    relationships: (relationships.data || []).map((item) => ({ target_type: item.source_type, target_id: item.source_id, affinity: relationshipBand(Number(item.affinity)), trust: relationshipBand(Number(item.trust)), respect: relationshipBand(Number(item.respect)), tension: relationshipBand(Number(item.tension)) })),
     personality: describePersonality(concepts.data || [], evidence),
-    potentialEstimate: estimatePotential(player.current_overall, hiddenData?.potential_ceiling, evidence),
-    developmentAssessment: developmentAssessment(Number(player.current_overall), hiddenData?.potential_ceiling, hiddenData?.development_consistency, evidence),
+    reports: (reports.data || []).map((report) => ({ ...report, estimates: (reportEstimates || []).filter((item) => item.report_id === report.id) })), consensus: consensus.data || [], reportAuthors: authors.data || [],
+    potentialEstimate: consensus.data?.find((item) => item.category === "potential") ? "Consulte o consenso dos relatorios." : "Ainda sem estimativa documentada.",
+    developmentAssessment: reports.data?.[0]?.recommendation || "A comissao ainda precisa observar o jogador.",
   };
 }
 
@@ -155,17 +174,5 @@ function describePersonality(rows: Array<{ concept: string; level: number; is_co
     .map((row) => PERSONALITY_LABELS[row.concept] || "Perfil ainda em observacao");
 }
 
-function estimatePotential(overall: number, ceiling: number | undefined, evidence: number) {
-  if (ceiling == null) return "Ainda sem estimativa confiavel";
-  const uncertainty = evidence < 35 ? 14 : evidence < 70 ? 9 : 5;
-  const midpoint = Math.round((Number(ceiling) + Number(overall)) / 2);
-  return `Estimativa da comissao: ${Math.max(0, midpoint - uncertainty)} a ${Math.min(100, midpoint + uncertainty)}`;
-}
-
-function developmentAssessment(overall: number, ceiling: number | undefined, consistency: number | undefined, evidence: number) {
-  if (ceiling == null || consistency == null) return "A comissao ainda precisa observar o jogador.";
-  const room = Number(ceiling) - overall;
-  const trend = room > 16 ? "ha margem relevante de evolucao" : room > 7 ? "ha margem moderada de evolucao" : "o rendimento atual parece proximo do patamar esperado";
-  const confidence = evidence >= 65 ? "A leitura possui boa confiabilidade." : "A leitura ainda possui margem de erro.";
-  return `${trend.charAt(0).toUpperCase()}${trend.slice(1)}. ${confidence}`;
-}
+function aptitudeBand(value: number) { return value >= 80 ? "Muito natural" : value >= 65 ? "Confortavel" : value >= 50 ? "Funcional" : value >= 35 ? "Em adaptacao" : "Pouco indicado"; }
+function relationshipBand(value: number) { return value >= 75 ? "Muito alta" : value >= 60 ? "Boa" : value >= 40 ? "Estavel" : value >= 25 ? "Baixa" : "Critica"; }

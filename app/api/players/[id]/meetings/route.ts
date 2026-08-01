@@ -2,6 +2,7 @@ import { apiError, apiSuccess } from "@/lib/auth/api";
 import { calculatePlayerReaction } from "@/lib/game/players/engine";
 import { getPlayerGameContext } from "@/lib/game/players/server";
 import { clamp } from "@/lib/game/random";
+import { applyPlayerRelationshipEvent, ensurePlayerRelationships } from "@/lib/game/relationships/server";
 
 export async function POST(request: Request, contextValue: { params: Promise<{ id: string }> }) {
   const context = await getPlayerGameContext();
@@ -63,5 +64,12 @@ export async function POST(request: Request, contextValue: { params: Promise<{ i
     affinity: clamp(50 + reaction.moraleDelta), trust: clamp(50 + reaction.leadershipTrustDelta), respect: clamp(50 + reaction.coachTrustDelta),
     conflict: clamp(reaction.moraleDelta < 0 ? Math.abs(reaction.moraleDelta) : 0), influence: 30,
   }, { onConflict: "player_id,target_type,target_id" });
+  await ensurePlayerRelationships(context.admin, context.club.id, player.id);
+  await applyPlayerRelationshipEvent(context.admin, {
+    clubId: context.club.id, sourceType: "user", sourceId: context.user.id, playerId: player.id,
+    eventType: reaction.classification,
+    deltas: { familiarity: 3, affinity: reaction.moraleDelta * 0.5, trust: reaction.leadershipTrustDelta, respect: reaction.coachTrustDelta, tension: reaction.moraleDelta < 0 ? Math.abs(reaction.moraleDelta) : -1 },
+    severity: Math.abs(reaction.moraleDelta) >= 5 ? 4 : 2,
+  });
   return apiSuccess({ meetingId: meeting.id, reaction, nextState, source: "deterministic_fallback" });
 }

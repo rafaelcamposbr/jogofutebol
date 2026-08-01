@@ -12,7 +12,7 @@ const DEFAULT_TRANSITIONS = { counterPress: true, regroup: false, counterAttack:
 const DEFAULT_OUT_OF_POSSESSION = { defensiveLine: 50, blockHeight: 52, pressing: 54, marking: "zonal", compactness: 58, preventShortBuildUp: false, offsideTrap: false, protectBox: true };
 
 export async function ensureDefaultTactic(admin: AdminClient, ownerId: string, clubId: string) {
-  const overview = await buildSquadOverview(admin, clubId);
+  const overview = await buildSquadOverview(admin, clubId, { internalEvaluation: true });
   const tacticId = deterministicUuid(`default-tactic:${clubId}`);
   const lineupId = deterministicUuid(`default-lineup:${clubId}`);
   const formation: Formation = "4-3-3";
@@ -40,7 +40,7 @@ export async function ensureDefaultTactic(admin: AdminClient, ownerId: string, c
   const players = overview.players.map((player) => ({
     id: player.id,
     main_position: player.main_position,
-    current_overall: Number(player.current_overall),
+    evaluationScore: Number(player.current_overall),
     tactical_familiarity: Number(player.dynamic?.tactical_familiarity || 45),
   }));
   const assignments = suggestLineup(formation, players);
@@ -61,7 +61,7 @@ export async function ensureDefaultTactic(admin: AdminClient, ownerId: string, c
 
 export async function buildTacticalSetup(admin: AdminClient, ownerId: string, clubId: string) {
   await ensureDefaultTactic(admin, ownerId, clubId);
-  const overview = await buildSquadOverview(admin, clubId);
+  const overview = await buildSquadOverview(admin, clubId, { internalEvaluation: true });
   const { data: tactic, error } = await admin.from("tactics").select("*").eq("club_id", clubId).eq("is_active", true).maybeSingle();
   if (error || !tactic) throw error || new Error("active_tactic_missing");
   const { data: lineup } = await admin.from("lineups").select("*").eq("club_id", clubId).eq("is_default", true).maybeSingle();
@@ -70,7 +70,11 @@ export async function buildTacticalSetup(admin: AdminClient, ownerId: string, cl
     lineup ? admin.from("lineup_players").select("*").eq("lineup_id", lineup.id).order("is_starter", { ascending: false }).order("bench_order") : Promise.resolve({ data: [], error: null }),
     admin.from("player_tactic_familiarity").select("*").eq("tactic_id", tactic.id),
   ]);
-  return { tactic, lineup, positions: positions.data || [], assignments: assignments.data || [], familiarity: familiarity.data || [], players: overview.players };
+  return { tactic, lineup, positions: positions.data || [], assignments: assignments.data || [], familiarity: familiarity.data || [], players: overview.players.map((player) => {
+    const { current_overall, weak_foot_level, ...safePlayer } = player;
+    void current_overall; void weak_foot_level;
+    return safePlayer;
+  }) };
 }
 
 export async function saveTacticalSetup(admin: AdminClient, input: {
