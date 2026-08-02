@@ -96,6 +96,13 @@ test("criacao QA usa o schema existente e sempre libera o botao", () => {
   assert.match(lab, /finally\s*\{\s*setBusy\(false\)/);
 });
 
+test("estatisticas gerenciadas nao preservam tracks minimos que causam overflow", () => {
+  const css = readFileSync("app/globals.css", "utf8");
+  assert.match(css, /\.managed-match \.comparison-stats\s*\{[^}]*grid-template-columns:\s*1fr/);
+  assert.match(css, /\.managed-match \.comparison-stats > div\s*\{[^}]*grid-template-columns:\s*minmax\(0,/);
+  assert.match(css, /\.match-objective-facts, \.match-statistics\s*\{\s*grid-column:\s*1 \/ -1/);
+});
+
 test("migration torna a verdade da partida privada e registra ciclo gerenciado", () => {
   const sql = readFileSync("supabase/migrations/20260802013045_managed_match_lifecycle_and_private_truth.sql", "utf8");
   assert.match(sql, /revoke select on public\.match_states, public\.match_commands, public\.match_events/i);
