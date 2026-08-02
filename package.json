@@ -7,8 +7,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "node scripts/source-audit.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "qa:check": "npm run lint && npm run typecheck && npm test",
+    "qa:build": "npm run qa:check && npm run build",
+    "qa": "npm run qa:build"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.3",

@@ -1,5 +1,6 @@
 import { clamp, createSeededRandom } from "../random.ts";
 import { mentalityModifier, resolveFoul, resolveInjury, resolveShot } from "./actions.ts";
+import { applyAutomaticDecisions, makeAutomaticSubstitution } from "./decisions.ts";
 import type { MatchCommand, MatchEvent, MatchInput, MatchPlayer, MatchSimulation, PlayerStats, TeamSide, TeamStats } from "./types.ts";
 
 function emptyTeamStats(side: TeamSide): TeamStats {
@@ -56,7 +57,7 @@ function applyCommands(minute: number, commands: MatchCommand[], state: {
       if (outPlayer && inPlayer && state.substitutions.filter((item) => item.side === side).length < 5) {
         state.removed[side].add(outPlayer.id); state.added[side].add(inPlayer.id);
         state.active[side] = activeFor(team, state.removed[side], state.added[side]);
-        state.substitutions.push({ minute, side, playerOutId: outPlayer.id, playerInId: inPlayer.id, reason: "user_command" });
+        state.substitutions.push({ minute, side, playerOutId: outPlayer.id, playerInId: inPlayer.id, reason: "pre_match_plan" });
         state.events.push({ eventIndex: 0, minute, stoppage: 0, teamSide: side, playerId: inPlayer.id, secondaryPlayerId: outPlayer.id, eventType: "substitution", zone: "technical_area", narrative: `${inPlayer.name} entra no lugar de ${outPlayer.name}.`, displayedXg: null, goalProbability: null, details: { commandId: command.id } });
       }
     }
@@ -75,12 +76,16 @@ export function simulateMatch(input: MatchInput, throughMinute = 90): MatchSimul
   const mentalities: Record<TeamSide, string> = { home: input.home.mentality, away: input.away.mentality };
   const substitutions: MatchSimulation["substitutions"] = [];
   const injuries: MatchSimulation["injuries"] = [];
+  const decisions: MatchSimulation["decisions"] = [];
   const yellowCounts: Record<string, number> = {};
   const possessionActions = { home: 0, away: 0 };
   let homeScore = 0; let awayScore = 0;
 
   for (let minute = 1; minute <= targetMinute; minute += 1) {
     applyCommands(minute, input.commands, { active, removed, added, mentalities, events, substitutions }, input);
+    applyAutomaticDecisions(input, {
+      active, removed, added, mentalities, events, substitutions, decisions, playerStats, yellowCounts,
+    }, minute, { home: homeScore, away: awayScore });
     (["home", "away"] as TeamSide[]).forEach((side) => {
       active[side].forEach((player) => {
         const stat = playerStats[player.id];
@@ -154,7 +159,13 @@ export function simulateMatch(input: MatchInput, throughMinute = 90): MatchSimul
       if (injury) {
         teamStats[side].injuries += 1; injuries.push({ side, ...injury });
         events.push({ eventIndex: 0, minute, stoppage: 0, teamSide: side, playerId: injuryTarget.id, secondaryPlayerId: null, eventType: "injury", zone: "field", narrative: `${injuryTarget.name} pede atendimento e deixa o campo para avaliacao.`, displayedXg: null, goalProbability: null, details: { severity: injury.severity, forcedSubstitution: injury.forcedSubstitution } });
-        if (injury.forcedSubstitution) { removed[side].add(injuryTarget.id); active[side] = activeFor(side === "home" ? input.home : input.away, removed[side], added[side]); }
+        if (injury.forcedSubstitution) {
+          removed[side].add(injuryTarget.id);
+          active[side] = activeFor(side === "home" ? input.home : input.away, removed[side], added[side]);
+          makeAutomaticSubstitution(input, {
+            active, removed, added, mentalities, events, substitutions, decisions, playerStats, yellowCounts,
+          }, minute, side, injuryTarget, "injury", false);
+        }
       }
     }
     if (minute === 45) events.push({ eventIndex: 0, minute, stoppage: 0, teamSide: "neutral", playerId: null, secondaryPlayerId: null, eventType: "halftime", zone: "field", narrative: `Intervalo: ${input.home.name} ${homeScore} x ${awayScore} ${input.away.name}.`, displayedXg: null, goalProbability: null, details: {} });
@@ -173,7 +184,7 @@ export function simulateMatch(input: MatchInput, throughMinute = 90): MatchSimul
   Object.values(playerStats).forEach((stat) => {
     stat.rating = Number(clamp(stat.rating + stat.keyPasses * 0.07 + stat.tackles * 0.04 + stat.interceptions * 0.05 - stat.turnovers * 0.018 - stat.redCards * 1.2, 3, 10).toFixed(2));
   });
-  return { throughMinute: targetMinute, homeScore, awayScore, events, teamStats, playerStats, activePlayerIds: { home: active.home.map((player) => player.id), away: active.away.map((player) => player.id) }, substitutions, injuries };
+  return { throughMinute: targetMinute, homeScore, awayScore, events, teamStats, playerStats, activePlayerIds: { home: active.home.map((player) => player.id), away: active.away.map((player) => player.id) }, substitutions, injuries, decisions };
 }
 
 function average(players: MatchPlayer[], key: "attack" | "creation" | "defense") {
