@@ -88,6 +88,14 @@ test("UI nao contem polling, placar parcial ou controles de transmissao", () => 
   }
 });
 
+test("criacao QA usa o schema existente e sempre libera o botao", () => {
+  const server = readFileSync("lib/game/matches/server.ts", "utf8");
+  const lab = readFileSync("components/QaMatchLab.tsx", "utf8");
+  assert.match(server, /current_overall,birth_date/);
+  assert.equal(server.includes("date_of_birth"), false);
+  assert.match(lab, /finally\s*\{\s*setBusy\(false\)/);
+});
+
 test("migration torna a verdade da partida privada e registra ciclo gerenciado", () => {
   const sql = readFileSync("supabase/migrations/20260802013045_managed_match_lifecycle_and_private_truth.sql", "utf8");
   assert.match(sql, /revoke select on public\.match_states, public\.match_commands, public\.match_events/i);

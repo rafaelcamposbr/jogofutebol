@@ -109,7 +109,7 @@ function playerModel(player: JsonRecord, assignment: JsonRecord, attributes: Jso
     goalkeeper: mean(goalkeeping, Object.keys(goalkeeping)),
     condition: Number(status?.physical_condition || 90),
     fatigue: Number(status?.fatigue || 8),
-    age: yearsOld(player.date_of_birth),
+    age: yearsOld(player.birth_date),
     isStarter: assignment.is_starter !== false,
   };
 }
@@ -128,7 +128,7 @@ async function captureHomeTeam(admin: AdminClient, ownerId: string, club: { id: 
   if (!setup.lineup) throw new Error("lineup_missing");
   const playerIds = setup.assignments.map((item) => item.player_id);
   const [playersResult, attributeResult, statusResult] = await Promise.all([
-    admin.from("players").select("id,known_as,main_position,current_overall,date_of_birth").in("id", playerIds),
+    admin.from("players").select("id,known_as,main_position,current_overall,birth_date").in("id", playerIds),
     admin.from("player_attributes").select("*").in("player_id", playerIds),
     admin.from("player_status").select("*").in("player_id", playerIds),
   ]);
